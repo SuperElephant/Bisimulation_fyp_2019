@@ -8,9 +8,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import cm
 
+
 class BisimPnT:
     def __init__(self, actions, graph_g, graph_h):
-        self.actions = actions
+        self.actions = actions  # type: list
         self.full_graph_U = nx.union_all([graph_g, graph_h], rename=('G-', 'H-'))  # type: nx.DiGraph
 
     # return the preimage of the block_s
@@ -29,13 +30,14 @@ class BisimPnT:
     # need change
     def split_block(self, block_b, block_s, action=None):
         result = []
+        prim_result = []
         if action is None:
             for action in self.actions:
                 prim_result = self.split_block(block_b, block_s, action)
                 if len(prim_result) == 2:
                     block_b = prim_result[1]  # second compound split result
                 result.append(prim_result[0])
-            if len(prim_result)==2:
+            if len(prim_result) == 2:
                 result.append(prim_result[1])
             return result
         else:
@@ -47,7 +49,7 @@ class BisimPnT:
                 result.append(b2)
             return result
 
-    def compound_blocks(self, partition_Q,partition_X):
+    def compound_blocks(self, partition_Q, partition_X):
         block_set_C = []
         for block_x in partition_X:
             if self.is_compound_to(block_x, partition_Q) is not False:
@@ -73,25 +75,24 @@ class BisimPnT:
         numOfBlocks = len(blocks)
 
         plt.figure(1)
+
         if not pos:
-            pos = nx.spring_layout(Q)
-        # nodeColors = cm.rainbow(np.linspace(0, 1, numOfBlocks))
-        # edgeColors = cm.rainbow(np.linspace(0, 1, numOfActions))
+            pos = nx.spring_layout(self.full_graph_U)
+
         for i in xrange(numOfBlocks):
-            # nx.draw_networkx_nodes(self.full_graph_U, pos, nodelist=blocks[i], node_color=nodeColors[i])
-            nx.draw_networkx_nodes(self.full_graph_U, pos, nodelist=blocks[i], node_color=[i]*len(blocks[i]),
+            nx.draw_networkx_nodes(self.full_graph_U, pos, nodelist=blocks[i], node_color=[i] * len(blocks[i]),
                                    cmap=cm.BrBG, vmin=-1, vmax=numOfBlocks)
         for i in xrange(numOfActions):
             acts = []
+
             for edge in self.full_graph_U.edges():
                 if (self.full_graph_U.get_edge_data(*edge)["action"] == self.actions[i]):
                     acts.append(edge)
-            # nx.draw_networkx_edges(self.full_graph_U, pos, edgelist=acts, edge_color=[edgeColors[i]] * len(acts))
-            nx.draw_networkx_edges(self.full_graph_U, pos, edgelist=acts, edge_color=[i]*len(acts),
+
+            nx.draw_networkx_edges(self.full_graph_U, pos, edgelist=acts, edge_color=[i] * len(acts),
                                    edge_cmap=cm.rainbow, edge_vmin=-1, edge_vmax=numOfActions,
                                    width=2.0, arrowsize=20)
         plt.show()
-
 
     def coarsest_partition(self, plot=True):
 
@@ -114,7 +115,7 @@ class BisimPnT:
             # update X:
             partition_X.remove(block_s)
             partition_X.append(block_s - block_b)
-            partition_X.append(block_b) # split block S in X
+            partition_X.append(block_b)  # split block S in X
 
             # if the rest is still not simple, put it back to C
             if self.is_compound_to(block_s - block_b, partition_Q) is not False:
@@ -145,29 +146,6 @@ class BisimPnT:
                         new_partition_Q.append(block_d12)
                     partition_Q = new_partition_Q
 
-            # # step 3:
-            # # compute preimage of B
-            # preimage_b = self.preimage(block_b)
-            # # compute preimage of S - B
-            # preimage_s_sub_b = self.preimage(block_s - block_b)
-            #
-            # # step 4:
-            # # refine Q wirh respect to B
-            # new_partition_Q = []
-            # for block_d in partition_Q:
-            #     block_d1 = block_d.intersection(preimage_b)
-            #     block_d2 = block_d - block_d1
-            #     block_d11 = block_d1.intersection(preimage_s_sub_b)
-            #     block_d12 = block_d - preimage_s_sub_b
-            #
-            #     if len(block_d2) and block_d2 not in new_partition_Q:
-            #         new_partition_Q.append(block_d2)
-            #     if len(block_d11) and block_d11 not in new_partition_Q:
-            #         new_partition_Q.append(block_d11)
-            #     if len(block_d12) and block_d12 not in new_partition_Q:
-            #         new_partition_Q.append(block_d12)
-            #     partition_Q = new_partition_Q`
-
             if plot:
                 self.plotGraph(partition_Q, pos)
         return partition_Q
@@ -183,8 +161,8 @@ class BisimPnT:
 
         return True
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     # the following is the bisimulation example:
     # # exanple 1:
     # G = nx.DiGraph()
@@ -202,7 +180,6 @@ if __name__ == '__main__':
     # k = BisimPnT(actions, G, H)
     # print("Example 1: ")
     # print(k.is_bisimilar())
-
 
     # # example 2
     # G = nx.DiGraph()
