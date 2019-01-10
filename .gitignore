@@ -1,0 +1,11 @@
+# environment:
+venv/
+
+# mac:
+.DS_Store
+
+# project
+.idea/
+
+# files
+bisim_PnT_hof.py

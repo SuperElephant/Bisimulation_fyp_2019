@@ -210,7 +210,7 @@ if __name__ == '__main__':
     G.add_edge(1, 2, action='a')
     G.add_edge(2, 3, action='b')
     G.add_edge(3, 1, action='c')
-    G.add_edge(3, 2, action='c')
+    G.add_edge(3, 2, action='b')
 
     H = nx.DiGraph()
     H.add_edge(1, 3, action='a')
