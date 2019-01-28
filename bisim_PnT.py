@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import cm
 
+# partition =[set('', ...), set('', '''), ...]
 
 class BisimPnT:
     def __init__(self, actions, graph_g, graph_h):

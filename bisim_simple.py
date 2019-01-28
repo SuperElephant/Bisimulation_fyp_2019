@@ -58,10 +58,4 @@ class BisimSimple:
 
 
 
-
-            if refined_blocks==False:
-
-
-
-
             
