@@ -1,7 +1,7 @@
 # this file is base on:
 # [1] Paige, R., & Tarjan, R. E. (1987). Three Partition Refinement Algorithms. SIAM Journal on
 #     Computing, 16(6), 973-989. http://doi.org/10.1137/0216062
-# [2] A. Hoffman, "ArielCHoffman/BisimulationAlgorithms,"Github, 2015.
+# [2] A. Hoffman, "ArielCHoffman/BisimulationAlgorithms,"Github, 2015.s
 
 import networkx as nx
 import numpy as np
@@ -11,30 +11,31 @@ from matplotlib.pyplot import cm
 # partition =[set('', ...), set('', '''), ...]
 
 class BisimPnT:
-    def __init__(self, actions, graph_g, graph_h):
-        self.actions = actions  # type: list
-        self.full_graph_U = nx.union_all([graph_g, graph_h], rename=('G-', 'H-'))  # type: nx.DiGraph
+    def __init__(self, labels, graph_g, graph_h=nx.MultiDiGraph()):
+        self.labels = labels  # type: list
+        self.full_graph_U = nx.union_all([graph_g, graph_h], rename=('G-', 'H-'))  # type: nx.MultiDiGraph
 
     # return the preimage of the block_s
-    def preimage(self, block_s, action=None):
+    def preimage(self, block_s, label=None):
         preimage = []
         for node in self.full_graph_U.nodes():
             successors = self.full_graph_U.successors(node)
-            if action is None:
+            if label is None:
                 if any((successor in block_s) for successor in successors):
                     preimage.append(node)
-            elif any((self.full_graph_U[node][successor]["action"] == action and successor in block_s)
+            elif any((any(edge['label'] == label for edge in self.full_graph_U[node][successor].itervalues())
+                                                         and successor in block_s)
                      for successor in successors):
                 preimage.append(node)
         return set(preimage)
 
     # need change
-    def split_block(self, block_b, block_s, action=None):
+    def split_block(self, block_b, block_s, label=None):
         result = []
         prim_result = []
-        if action is None:
-            for action in self.actions:
-                prim_result = self.split_block(block_b, block_s, action)
+        if label is None:
+            for label in self.labels:
+                prim_result = self.split_block(block_b, block_s, label)
                 if len(prim_result) == 2:
                     block_b = prim_result[1]  # second compound split result
                 result.append(prim_result[0])
@@ -42,7 +43,7 @@ class BisimPnT:
                 result.append(prim_result[1])
             return result
         else:
-            b1 = set(block_b).intersection(set(self.preimage(block_s, action=action)))
+            b1 = set(block_b).intersection(set(self.preimage(block_s, label=label)))
             b2 = set(block_b) - b1
             if b1:
                 result.append(b1)
@@ -72,7 +73,8 @@ class BisimPnT:
         return False
 
     def plotGraph(self, blocks, pos=None):
-        numOfActions = len(self.actions)
+        # TODO: visualization need redo
+        numOfActions = len(self.labels)
         numOfBlocks = len(blocks)
 
         plt.figure(1)
@@ -87,7 +89,7 @@ class BisimPnT:
             acts = []
 
             for edge in self.full_graph_U.edges():
-                if (self.full_graph_U.get_edge_data(*edge)["action"] == self.actions[i]):
+                if (self.full_graph_U.get_edge_data(*edge)["label"] == self.labels[i]):
                     acts.append(edge)
 
             nx.draw_networkx_edges(self.full_graph_U, pos, edgelist=acts, edge_color=[i] * len(acts),
@@ -122,13 +124,13 @@ class BisimPnT:
             if self.is_compound_to(block_s - block_b, partition_Q) is not False:
                 block_set_C.append(block_s - block_b)
 
-            for action in self.actions:
+            for label in self.labels:
 
                 # step 3:
                 # compute preimage of B
-                preimage_b = self.preimage(block_b, action)
+                preimage_b = self.preimage(block_b, label)
                 # compute preimage of S - B
-                preimage_s_sub_b = self.preimage(block_s - block_b, action)
+                preimage_s_sub_b = self.preimage(block_s - block_b, label)
 
                 # step 4:
                 # refine Q wirh respect to B
@@ -167,63 +169,63 @@ if __name__ == '__main__':
     # the following is the bisimulation example:
     # # exanple 1:
     # G = nx.DiGraph()
-    # G.add_edge(1, 2, action='a')
-    # G.add_edge(2, 3, action='b')
-    # G.add_edge(2, 4, action='b')
+    # G.add_edge(1, 2, label='a')
+    # G.add_edge(2, 3, label='b')
+    # G.add_edge(2, 4, label='b')
     #
     # H = nx.DiGraph()
-    # H.add_edge(1, 2, action='a')
-    # H.add_edge(1, 4, action='a')
-    # H.add_edge(2, 3, action='b')
-    # H.add_edge(4, 5, action='b')
+    # H.add_edge(1, 2, label='a')
+    # H.add_edge(1, 4, label='a')
+    # H.add_edge(2, 3, label='b')
+    # H.add_edge(4, 5, label='b')
     #
-    # actions = ['a', 'b', 'c']
-    # k = BisimPnT(actions, G, H)
+    # labels = ['a', 'b', 'c']
+    # k = BisimPnT(labels, G, H)
     # print("Example 1: ")
     # print(k.is_bisimilar())
 
     # # example 2
     # G = nx.DiGraph()
-    # G.add_edge(1, 2, action='a')
-    # G.add_edge(2, 3, action='a')
-    # G.add_edge(2, 1, action='b')
-    # G.add_edge(3, 2, action='b')
+    # G.add_edge(1, 2, label='a')
+    # G.add_edge(2, 3, label='a')
+    # G.add_edge(2, 1, label='b')
+    # G.add_edge(3, 2, label='b')
     #
     # H = nx.DiGraph()
-    # H.add_edge(1, 2, action='a')
-    # H.add_edge(1, 3, action='a')
-    # H.add_edge(2, 4, action='a')
-    # H.add_edge(2, 1, action='b')
-    # H.add_edge(3, 5, action='a')
-    # H.add_edge(3, 1, action='b')
-    # H.add_edge(4, 3, action='b')
-    # H.add_edge(5, 2, action='b')
+    # H.add_edge(1, 2, label='a')
+    # H.add_edge(1, 3, label='a')
+    # H.add_edge(2, 4, label='a')
+    # H.add_edge(2, 1, label='b')
+    # H.add_edge(3, 5, label='a')
+    # H.add_edge(3, 1, label='b')
+    # H.add_edge(4, 3, label='b')
+    # H.add_edge(5, 2, label='b')
     #
-    # actions = ['a', 'b']
-    # k = BisimPnT(actions, G, H)
+    # labels = ['a', 'b']
+    # k = BisimPnT(labels, G, H)
     # print("Example 2: ")
     # print(k.is_bisimilar())
     #
     #
     # example 3
-    G = nx.DiGraph()
-    G.add_edge(1, 3, action='a')
-    G.add_edge(1, 2, action='a')
-    G.add_edge(2, 3, action='b')
-    G.add_edge(3, 1, action='c')
-    G.add_edge(3, 2, action='b')
+    G = nx.MultiDiGraph()
+    G.add_edge(1, 3, label='a')
+    G.add_edge(1, 2, label='a')
+    G.add_edge(2, 3, label='b')
+    G.add_edge(3, 1, label='c')
+    G.add_edge(3, 2, label='b')
 
-    H = nx.DiGraph()
-    H.add_edge(1, 3, action='a')
-    H.add_edge(1, 4, action='a')
-    H.add_edge(2, 3, action='b')
-    H.add_edge(3, 1, action='c')
-    H.add_edge(3, 4, action='c')
-    H.add_edge(4, 5, action='b')
-    H.add_edge(5, 1, action='c')
-    H.add_edge(5, 2, action='c')
+    H = nx.MultiDiGraph()
+    H.add_edge(1, 3, label='a')
+    H.add_edge(1, 4, label='a')
+    H.add_edge(2, 3, label='b')
+    H.add_edge(3, 1, label='c')
+    H.add_edge(3, 4, label='c')
+    H.add_edge(4, 5, label='b')
+    H.add_edge(5, 1, label='c')
+    H.add_edge(5, 2, label='c')
 
-    actions = ['a', 'b', 'c']
-    k = BisimPnT(actions, G, H)
+    labels = ['a', 'b', 'c']
+    k = BisimPnT(labels, G, H)
     print("Example 3: ")
     print(k.is_bisimilar())
