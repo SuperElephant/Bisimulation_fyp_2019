@@ -10,12 +10,12 @@ from graphviz import render, view
 def plotGraph(graph, file_name='test.dot'):
     write_dot(graph, file_name)
     render('dot', 'png', file_name)
-    view(file_name)
+    view(file_name + '.png')
 
 
-def plotGraphWithPattition(graph, blocks=None):
+def plotGraphWithPattition(graph, blocks=None, file_name='test.dot'):
     if not blocks:
-        plotGraph(graph)
+        plotGraph(graph, file_name)
         return
 
     colored_graph = nx.MultiDiGraph()
@@ -27,13 +27,13 @@ def plotGraphWithPattition(graph, blocks=None):
     for edge in graph.edges(data=True):
         colored_graph.add_edge(edge[0], edge[1], label=edge[2]["label"], color=ord(edge[2]["label"]) - 96,
                                colorscheme=const.EDGE_COLOR_SCHEME)
-    plotGraph(colored_graph)
+    plotGraph(colored_graph, file_name)
 
 # def plotGraphWithPattition(graph, blocks=None, labels=list(), pos=None):
 #
 #     numOfActions = len(labels)
 #     numOfBlocks = len(blocks)
-# 
+#
 #     plt.figure(1)
 #
 #     if not pos:
