@@ -5,15 +5,19 @@
 
 import networkx as nx
 import numpy as np
+import visulization as vi
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import cm
 
 # partition =[set('', ...), set('', '''), ...]
 
 class BisimPnT:
-    def __init__(self, labels, graph_g, graph_h=nx.MultiDiGraph()):
+    def __init__(self, labels, graph_g, graph_h=None):
         self.labels = labels  # type: list
-        self.full_graph_U = nx.union_all([graph_g, graph_h], rename=('G-', 'H-'))  # type: nx.MultiDiGraph
+        if graph_h == None:
+            self.full_graph_U = graph_g
+        else:
+            self.full_graph_U = nx.union_all([graph_g, graph_h], rename=('G-', 'H-'))  # type: nx.MultiDiGraph
 
     # return the preimage of the block_s
     def preimage(self, block_s, label=None):
@@ -23,7 +27,12 @@ class BisimPnT:
             if label is None:
                 if any((successor in block_s) for successor in successors):
                     preimage.append(node)
-            elif any((any(edge['label'] == label for edge in self.full_graph_U[node][successor].itervalues())
+            elif type(self.full_graph_U) == nx.DiGraph \
+                    and any((self.full_graph_U[node][successor]['label'] == label and successor in block_s)
+                            for successor in successors):
+                preimage.append(node)
+            elif type(self.full_graph_U) == nx.MultiDiGraph \
+                    and any((any(edge['label'] == label for edge in self.full_graph_U[node][successor].itervalues())
                                                          and successor in block_s)
                      for successor in successors):
                 preimage.append(node)
@@ -72,30 +81,38 @@ class BisimPnT:
                         return contained_blocks[1]
         return False
 
-    def plotGraph(self, blocks, pos=None):
-        # TODO: visualization need redo
-        numOfActions = len(self.labels)
-        numOfBlocks = len(blocks)
+    # def plotDiGraph(self, blocks, graph=None, labels=None, pos=None):
+    #     if not graph:
+    #         graph = self.full_graph_U
+    #     if not labels:
+    #         labels = self.labels
+    #     numOfActions = len(labels)
+    #     numOfBlocks = len(blocks)
+    #
+    #     plt.figure(1)
+    #
+    #     if not pos:
+    #         pos = nx.spring_layout(graph)
+    #
+    #     for i in xrange(numOfBlocks):
+    #         nx.draw_networkx_nodes(graph, pos, nodelist=blocks[i], node_color=[i] * len(blocks[i]),
+    #                                cmap=cm.BrBG, vmin=-1, vmax=numOfBlocks)
+    #     for i in xrange(numOfActions):
+    #         acts = []
+    #
+    #         for edge in graph.edges():
+    #             if (graph.get_edge_data(*edge)["label"] == labels[i]):
+    #                 acts.append(edge)
+    #
+    #         nx.draw_networkx_edges(graph, pos, edgelist=acts, edge_color=[i] * len(acts),
+    #                                edge_cmap=cm.rainbow, edge_vmin=-1, edge_vmax=numOfActions,
+    #                                width=2.0, arrowsize=20)
+    #     plt.show()
+    #
+    # def plotMultiDiGraph(self, blocks):
+    #     print(blocks)
+    #     pass
 
-        plt.figure(1)
-
-        if not pos:
-            pos = nx.spring_layout(self.full_graph_U)
-
-        for i in xrange(numOfBlocks):
-            nx.draw_networkx_nodes(self.full_graph_U, pos, nodelist=blocks[i], node_color=[i] * len(blocks[i]),
-                                   cmap=cm.BrBG, vmin=-1, vmax=numOfBlocks)
-        for i in xrange(numOfActions):
-            acts = []
-
-            for edge in self.full_graph_U.edges():
-                if (self.full_graph_U.get_edge_data(*edge)["label"] == self.labels[i]):
-                    acts.append(edge)
-
-            nx.draw_networkx_edges(self.full_graph_U, pos, edgelist=acts, edge_color=[i] * len(acts),
-                                   edge_cmap=cm.rainbow, edge_vmin=-1, edge_vmax=numOfActions,
-                                   width=2.0, arrowsize=20)
-        plt.show()
 
     def coarsest_partition(self, plot=True):
 
@@ -150,8 +167,28 @@ class BisimPnT:
                     partition_Q = new_partition_Q
 
             if plot:
-                self.plotGraph(partition_Q, pos)
+                vi.plotGraphWithPattition(self.full_graph_U, partition_Q)
         return partition_Q
+
+    def get_min_graph(self):
+        G = nx.MultiDiGraph()
+        partition = self.coarsest_partition()
+        new_partition = []
+        for n in range(len(partition)):
+
+            # for part in partition:
+            possible_type = []
+            node = partition[n].copy().pop()
+            new_partition.append({n + 1})
+            for successor in self.full_graph_U.successors(node):
+                for i in range(len(partition)):
+                    if successor in partition[i] and i not in possible_type:
+                        possible_type.append(i)
+                        links = {label.values()[0] for label in
+                                 self.full_graph_U.get_edge_data(node, successor).values()}
+                        for label in links:
+                            G.add_edge(n + 1, i + 1, label=label)
+        return [G, new_partition]
 
     def is_bisimilar(self):
 
@@ -207,13 +244,28 @@ if __name__ == '__main__':
     # print(k.is_bisimilar())
     #
     #
-    # example 3
-    G = nx.MultiDiGraph()
-    G.add_edge(1, 3, label='a')
-    G.add_edge(1, 2, label='a')
-    G.add_edge(2, 3, label='b')
-    G.add_edge(3, 1, label='c')
-    G.add_edge(3, 2, label='b')
+    # # example 3
+    # G = nx.MultiDiGraph()
+    # G.add_edge(1, 3, label='a')
+    # G.add_edge(1, 2, label='a')
+    # G.add_edge(2, 3, label='b')
+    # G.add_edge(3, 1, label='c')
+    # G.add_edge(3, 2, label='b')
+    #
+    # H = nx.MultiDiGraph()
+    # H.add_edge(1, 3, label='a')
+    # H.add_edge(1, 4, label='a')
+    # H.add_edge(2, 3, label='b')
+    # H.add_edge(3, 1, label='c')
+    # H.add_edge(3, 4, label='c')
+    # H.add_edge(4, 5, label='b')
+    # H.add_edge(5, 1, label='c')
+    # H.add_edge(5, 2, label='c')
+    #
+    # labels = ['a', 'b', 'c']
+    # k = BisimPnT(labels, G, H)
+    # print("Example 3: ")
+    # print(k.is_bisimilar())
 
     H = nx.MultiDiGraph()
     H.add_edge(1, 3, label='a')
@@ -226,6 +278,7 @@ if __name__ == '__main__':
     H.add_edge(5, 2, label='c')
 
     labels = ['a', 'b', 'c']
-    k = BisimPnT(labels, G, H)
-    print("Example 3: ")
-    print(k.is_bisimilar())
+    k = BisimPnT(labels, H)
+    print(k.coarsest_partition(True))
+    t = k.get_min_graph()
+    vi.plotGraphWithPattition(t[0], t[1], 'test_min')
