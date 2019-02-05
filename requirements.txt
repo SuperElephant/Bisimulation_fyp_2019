@@ -1,10 +1,12 @@
 backports.functools-lru-cache==1.5
 cycler==0.10.0
 decorator==4.3.2
+graphviz==0.10.1
 kiwisolver==1.0.1
 matplotlib==2.2.3
 networkx==2.2
 numpy==1.16.0
+pydot==1.4.1
 pyparsing==2.3.1
 python-dateutil==2.7.5
 pytz==2018.9
