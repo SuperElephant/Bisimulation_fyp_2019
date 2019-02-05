@@ -5,7 +5,7 @@
 
 import networkx as nx
 import numpy as np
-import visulization as vi
+import visualization as vi
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import cm
 
@@ -167,7 +167,7 @@ class BisimPnT:
                     partition_Q = new_partition_Q
 
             if plot:
-                vi.plotGraphWithPattition(self.full_graph_U, partition_Q)
+                vi.plot_graph_with_partition(self.full_graph_U, partition_Q)
         return partition_Q
 
     def get_min_graph(self):
@@ -281,4 +281,4 @@ if __name__ == '__main__':
     k = BisimPnT(labels, H)
     print(k.coarsest_partition(True))
     t = k.get_min_graph()
-    vi.plotGraphWithPattition(t[0], t[1], 'test_min')
+    vi.plot_graph_with_partition(t[0], t[1], 'test_min')
