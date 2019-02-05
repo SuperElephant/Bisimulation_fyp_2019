@@ -7,15 +7,15 @@ from networkx.drawing.nx_pydot import write_dot
 from graphviz import render, view
 
 
-def plotGraph(graph, file_name='test.dot'):
-    write_dot(graph, file_name)
-    render('dot', 'png', file_name)
-    view(file_name + '.png')
+def plot_graph(graph, file_name='test'):
+    write_dot(graph, 'graphs/' + file_name)
+    render('dot', 'png', 'graphs/' + file_name)
+    view('graphs/' + file_name + '.png')
 
 
-def plotGraphWithPattition(graph, blocks=None, file_name='test.dot'):
+def plot_graph_with_partition(graph, blocks=None, file_name='test'):
     if not blocks:
-        plotGraph(graph, file_name)
+        plot_graph(graph, file_name)
         return
 
     colored_graph = nx.MultiDiGraph()
@@ -27,9 +27,9 @@ def plotGraphWithPattition(graph, blocks=None, file_name='test.dot'):
     for edge in graph.edges(data=True):
         colored_graph.add_edge(edge[0], edge[1], label=edge[2]["label"], color=ord(edge[2]["label"]) - 96,
                                colorscheme=const.EDGE_COLOR_SCHEME)
-    plotGraph(colored_graph, file_name)
+    plot_graph(colored_graph, file_name)
 
-# def plotGraphWithPattition(graph, blocks=None, labels=list(), pos=None):
+# def plot_graph_with_partition(graph, blocks=None, labels=list(), pos=None):
 #
 #     numOfActions = len(labels)
 #     numOfBlocks = len(blocks)
