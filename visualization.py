@@ -1,4 +1,5 @@
 import pydot
+import os
 import networkx as nx
 import constants as const
 import matplotlib.pyplot as plt
@@ -8,6 +9,8 @@ from graphviz import render, view
 
 
 def plot_graph(graph, file_name='test'):
+    if not os.path.exists('graphs/'):
+        os.makedirs('graphs/')
     write_dot(graph, 'graphs/' + file_name)
     render('dot', 'png', 'graphs/' + file_name)
     view('graphs/' + file_name + '.png')
