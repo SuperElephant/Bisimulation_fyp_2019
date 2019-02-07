@@ -173,13 +173,13 @@ class BisimPnT:
     def get_min_graph(self):
         G = nx.MultiDiGraph()
         partition = self.coarsest_partition()
-        new_partition = []
+        # new_partition = []
         for n in range(len(partition)):
 
             # for part in partition:
             possible_type = []
             node = partition[n].copy().pop()
-            new_partition.append({n + 1})
+            # new_partition.append({n + 1})
             for successor in self.full_graph_U.successors(node):
                 for i in range(len(partition)):
                     if successor in partition[i] and i not in possible_type:
@@ -187,8 +187,9 @@ class BisimPnT:
                         links = {label.values()[0] for label in
                                  self.full_graph_U.get_edge_data(node, successor).values()}
                         for label in links:
-                            G.add_edge(n + 1, i + 1, label=label)
-        return [G, new_partition]
+                            G.add_edge(n, i, label=label)
+        # return [G, new_partition]
+        return G
 
     def is_bisimilar(self):
 
@@ -281,4 +282,4 @@ if __name__ == '__main__':
     k = BisimPnT(labels, H)
     print(k.coarsest_partition(True))
     t = k.get_min_graph()
-    vi.plot_graph_with_partition(t[0], t[1], 'test_min')
+    # vi.plot_graph_with_partition(t[0], t[1], 'test_min')
