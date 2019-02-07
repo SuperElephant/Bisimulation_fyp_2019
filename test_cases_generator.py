@@ -10,52 +10,42 @@ import networkx.algorithms.isomorphism as iso
 
 
 def test_cases_generator(min_node_number=5, edge_type_number=3, probability=0.1):
-    n = min_node_number
-    graph1 = random_labeled_digraph(n, edge_type_number, probability)
-    t = bi.BisimPnT([chr(97 + t) for t in range(edge_type_number)], graph1)
-    graph_s = t.get_min_graph()
-
-    print(probability)
-    # return [G, H]
-
-    # TODO: generate test case base on a random digraph
+    pass
+    # TODO: depends on the ML input requirement
 
 
 def generate_random_similar(graph, edge_type_number):
     min_graph = bi.BisimPnT([chr(97 + t) for t in range(edge_type_number)], graph).get_min_graph()
     min_node_number = min_graph.order()
-    partition = [{i + 1} for i in range(min_node_number)]
+    partition = [{i} for i in range(min_node_number)]
     node_number = graph.order()
     if min_node_number == node_number:
         return random_relabel(graph, edge_type_number)
     for i in xrange(min_node_number, node_number):
         partition[random.randint(0, min_node_number - 1)].add(i)
+    result_graph = None
+    while not result_graph or result_graph.order() != graph.order():
+        result_graph = nx.MultiDiGraph()
+        for start_node_type in xrange(min_node_number):
+            for end_node_type in min_graph.successors(start_node_type):  # for each origin type pair
+                for edge_label in [edge['label'] for edge in
+                                   min_graph.get_edge_data(start_node_type, end_node_type).values()]:
+                    # for each type edge
+                    start_nodes = random.sample(partition[start_node_type],
+                                                random.randint(1, len(partition[start_node_type])))
+                    for star_node in start_nodes:
+                        end_nodes = random.sample(partition[end_node_type],
+                                                  random.randint(1, len(partition[end_node_type])))
+                        for end_node in end_nodes:
+                            result_graph.add_edge(star_node, end_node, label=edge_label)
 
-    result_graph = nx.MultiDiGraph()
-    for start_node_type in xrange(min_node_number):
-        for end_node_type in min_graph.successors(start_node_type):  # for each origin type pair
-            for edge_label in [edge['label'] for edge in
-                               min_graph.get_edge_data(start_node_type, end_node_type).values()]:
-                # for each type edge
-                start_nodes = random.sample(partition[start_node_type],
-                                            random.randint(1, len(partition[start_node_type])))
-                for star_node in start_nodes:
-                    end_nodes = random.sample(partition[end_node_type],
-                                              random.randint(1, len(partition[end_node_type])))
-                    for end_node in end_nodes:
-                        result_graph.add_edge(star_node, end_node, label=edge_label)
     return result_graph
 
 
-def random_relabel(graph, label_number=None):
+def random_relabel(graph):
     n = graph.order()
     t = random.sample(range(n), n)
     result_graph = nx.relabel_nodes(graph, {i: t[i] for i in xrange(n)})
-    if label_number:
-        t = random.sample(range(label_number), label_number)
-        for edge in result_graph.edges(data=True):
-            origin_label = edge[2]['label']
-            edge[2]['label'] = chr(97 + t[ord(origin_label) - 97])
     return result_graph
 
 def generate_all(node_number=5, edge_number=3):
@@ -139,24 +129,24 @@ if __name__ == '__main__':
     from networkx.drawing.nx_pydot import write_dot
     import visualization as vi
 
-    # a = nx.MultiDiGraph()
-    # a.add_edge(0,1,label='a')
-    # a.add_edge(0,2,label='a')
-    # a.add_edge(1,3,label='b')
-    # a.add_edge(2,4,label='b')
-    # vi.plot_graph(a,'test')
-    # b = generate_random_similar(a,2)
-    # vi.plot_graph(b,'test1')
+    a = nx.MultiDiGraph()
+    a.add_edge(0, 1, label='a')
+    a.add_edge(0, 2, label='a')
+    a.add_edge(1, 3, label='b')
+    a.add_edge(2, 4, label='b')
+    vi.plot_graph(a, 'test')
+    b = generate_random_similar(a, 2)
+    vi.plot_graph(b, 'test1')
+
+    print a
+
+    # a = generate_all(3, 1)
+    # b = classify_graphs(a, ['a'])
+    # print(b)
     #
-    # print a
-
-    a = generate_all(3, 1)
-    b = classify_graphs(a, ['a'])
-    print(b)
-
-    for i in range(0, 392, 30):
-        vi.plot_graph(a[i], "test_case" + str(i))
-    print len(a)
+    # for i in range(0, 392, 30):
+    #     vi.plot_graph(a[i], "test_case" + str(i))
+    # print len(a)
 
 
 #
