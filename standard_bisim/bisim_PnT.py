@@ -18,6 +18,7 @@ class BisimPnT:
             self.full_graph_U = graph_g
         else:
             self.full_graph_U = nx.union_all([graph_g, graph_h], rename=('G-', 'H-'))  # type: nx.MultiDiGraph
+        self.co_partition = []
 
     # return the preimage of the block_s
     def preimage(self, block_s, label=None):
@@ -33,8 +34,8 @@ class BisimPnT:
                 preimage.append(node)
             elif type(self.full_graph_U) == nx.MultiDiGraph \
                     and any((any(edge['label'] == label for edge in self.full_graph_U[node][successor].itervalues())
-                                                         and successor in block_s)
-                     for successor in successors):
+                             and successor in block_s)
+                            for successor in successors):
                 preimage.append(node)
         return set(preimage)
 
@@ -43,13 +44,14 @@ class BisimPnT:
         result = []
         prim_result = []
         if label is None:
+            if not (block_b and block_s):
+                return []
             for label in self.labels:
                 prim_result = self.split_block(block_b, block_s, label)
                 if len(prim_result) == 2:
                     block_b = prim_result[1]  # second compound split result
-                result.append(prim_result[0])
-            if len(prim_result) == 2:
-                result.append(prim_result[1])
+                    result.append(prim_result[0])
+            result.append(prim_result[-1])
             return result
         else:
             b1 = set(block_b).intersection(set(self.preimage(block_s, label=label)))
@@ -114,7 +116,7 @@ class BisimPnT:
     #     pass
 
 
-    def coarsest_partition(self, plot=True):
+    def coarsest_partition(self, plot=False):
 
         # Initial
         block_u = set(self.full_graph_U.nodes())
@@ -122,7 +124,6 @@ class BisimPnT:
         partition_Q = self.split_block(block_u, block_u)
         partition_X = [block_u]
         block_set_C = [block_u]
-        pos = nx.kamada_kawai_layout(self.full_graph_U)
 
         block_set_C = self.compound_blocks(partition_Q, partition_X)
         while len(block_set_C) != 0:
@@ -169,26 +170,34 @@ class BisimPnT:
             block_set_C = self.compound_blocks(partition_Q, partition_X)
             if plot:
                 vi.plot_graph_with_partition(self.full_graph_U, partition_Q)
+
+        self.co_partition = partition_Q
         return partition_Q
 
     def get_min_graph(self):
-        G = nx.MultiDiGraph()
-        partition = self.coarsest_partition()
-        # new_partition = []
+        if not self.co_partition :
+            self.coarsest_partition()
+        partition = [i.copy() for i in self.co_partition]
+        if len(partition)==self.full_graph_U.order():
+            return nx.MultiDiGraph(self.full_graph_U)
+        else:
+            G = nx.MultiDiGraph()
+
         for n in range(len(partition)):
 
             # for part in partition:
             possible_type = []
-            node = partition[n].copy().pop()
-            # new_partition.append({n + 1})
-            for successor in self.full_graph_U.successors(node):
-                for i in range(len(partition)):
-                    if successor in partition[i] and i not in possible_type:
-                        possible_type.append(i)
-                        links = {label.values()[0] for label in
-                                 self.full_graph_U.get_edge_data(node, successor).values()}
-                        for label in links:
-                            G.add_edge(n, i, label=label)
+            while partition[n]:
+                node = partition[n].pop()
+                # new_partition.append({n + 1})
+                for successor in self.full_graph_U.successors(node):
+                    for i in range(len(partition)):
+                        if successor in self.co_partition[i] and i not in possible_type:
+                            possible_type.append(i)
+                            links = {label.values()[0] for label in
+                                     self.full_graph_U.get_edge_data(node, successor).values()}
+                            for label in links:
+                                G.add_edge(n, i, label=label)
         # return [G, new_partition]
         return G
 
@@ -205,23 +214,23 @@ class BisimPnT:
 
 
 if __name__ == '__main__':
-    # the following is the bisimulation example:
-    # exanple 1:
-    G = nx.DiGraph()
-    G.add_edge(5, 2, label='a')
-    G.add_edge(2, 3, label='b')
-    G.add_edge(2, 4, label='b')
-
-    H = nx.DiGraph()
-    H.add_edge(1, 2, label='a')
-    H.add_edge(1, 4, label='a')
-    H.add_edge(2, 3, label='b')
-    H.add_edge(4, 5, label='b')
-
-    labels = ['a', 'b', 'c']
-    k = BisimPnT(labels, G, H)
-    print("Example 1: ")
-    print(k.is_bisimilar())
+    # # the following is the bisimulation example:
+    # # exanple 1:
+    # G = nx.DiGraph()
+    # G.add_edge(5, 2, label='a')
+    # G.add_edge(2, 3, label='b')
+    # G.add_edge(2, 4, label='b')
+    #
+    # H = nx.DiGraph()
+    # H.add_edge(1, 2, label='a')
+    # H.add_edge(1, 4, label='a')
+    # H.add_edge(2, 3, label='b')
+    # H.add_edge(4, 5, label='b')
+    #
+    # labels = ['a', 'b', 'c']
+    # k = BisimPnT(labels, G, H)
+    # print("Example 1: ")
+    # print(k.is_bisimilar())
 
     # # example 2
     # G = nx.DiGraph()
@@ -284,3 +293,22 @@ if __name__ == '__main__':
     # print(k.coarsest_partition(True))
     # t = k.get_min_graph()
     # vi.plot_graph_with_partition(t[0], t[1], 'test_min')
+
+    a = nx.MultiDiGraph()
+    a.add_edge(0,0, label='b')
+    a.add_edge(0,0, label='a')
+    a.add_edge(1,0, label='a')
+    a.add_edge(1,1, label='b')
+    a.add_edge(2,1, label='a')
+    a.add_edge(2,1, label='b')
+    a.add_edge(2,2, label='a')
+    a.add_edge(2,0, label='b')
+
+    k = BisimPnT(['a','b'],a)
+    vi.plot_graph(a,'raw')
+    par = k.coarsest_partition()
+    print(par)
+    vi.plot_graph_with_partition(a,par,'with_p')
+    min_g = k.get_min_graph()
+    vi.plot_graph(min_g,'min')
+
