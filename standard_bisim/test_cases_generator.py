@@ -12,11 +12,15 @@ import time
 from contextlib import contextmanager
 import logging
 import visualization as vi
+import os
+import argparse
 
 def test_cases_generator(type = "random", number = 100, file_name = "test_cases",
-                         min_node_number=5, edge_type_number=3, probability=0.5):
+                         min_node_number=5, edge_type_number=3, probability=0.5, p_rate=0.5):
     labels = [chr(97+i) for i in xrange(edge_type_number)]
-    with open(file_name+'.csv', 'w') as csvfile:
+    if not os.access('./data/', os.R_OK):
+        os.mkdir('./data/')
+    with open('./data/'+file_name+'.csv', 'w') as csvfile:
         if type == 'random':
             fieldnames = ['g1','g2','bis']
             writer = csv.DictWriter(csvfile, fieldnames = fieldnames)
@@ -29,7 +33,7 @@ def test_cases_generator(type = "random", number = 100, file_name = "test_cases"
                     g1 = random_labeled_digraph(min_node_number,edge_type_number,random.random()*probability)
                 g1_bin = get_bin_array_from_graph(g1,min_node_number,edge_type_number)
                 bis = 1
-                if random.random() > 0.5:
+                if random.random() > p_rate:
                     g2 = generate_random_similar(g1,edge_type_number)
                 else:
                     g2 = random_labeled_digraph(min_node_number,edge_type_number,random.random()*probability)
@@ -70,7 +74,7 @@ def test_cases_generator(type = "random", number = 100, file_name = "test_cases"
 @contextmanager
 def log_time(prefix=""):
     start = time.time()
-    logging.getLogger().setLevel(logging.DEBUG)
+    # logging.getLogger().setLevel(logging.DEBUG)
     try:
         yield
     finally:
@@ -239,6 +243,44 @@ def random_labeled_digraph(node_number, edge_types_number, p):
 
 
 if __name__ == '__main__':
+
+    print os.getcwd()
+    os.chdir(os.path.join(os.path.dirname(__file__), os.path.pardir))
+    print os.getcwd()
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-t', '--type', type=str, choices=('random','all'),default='random', dest='type',
+                        help='Type of data set')
+    parser.add_argument('-n', '--number', type=int, default=10, dest='number',
+                        help='The length of data set')
+    parser.add_argument('-f', '--file_name', type=str, default='test_cases', dest='file_name',
+                        help='Name of the output file')
+    parser.add_argument('-v', '--node_number', type=int, default=3, dest='node_number',
+                        help='Number of the nodes of the graph in the data set')
+    parser.add_argument('-e', '--edge_type-number', type=int, default=2, dest='edge_type_number',
+                        help='The total types of the edge in the graphs')
+    parser.add_argument('-r', '--p_rate', type=float, default=0.5, dest='p_rate',
+                        help='Rate of the positive cases over all cases')
+    parser.add_argument('-p', '--probability', type=float, default=0.5, dest='probability',
+                        help='The density of the random generate graphs')
+    args = parser.parse_args()
+    # print args
+
+    test_cases_generator(type=args.type,
+                         number=args.number,
+                         min_node_number=args.node_number,
+                         edge_type_number=args.edge_type_number,
+                         file_name=args.file_name,
+                         p_rate=args.p_rate,
+                         probability=args.probability
+                         )
+
+
+
+
+    # type = "random", number = 100, file_name = "test_cases",
+    # min_node_number=5, edge_type_number=3, probability=0.5
+
     import pydot
     from graphviz import render, view
     from networkx.drawing.nx_pydot import write_dot
@@ -255,7 +297,7 @@ if __name__ == '__main__':
     #
     # print a
 
-    test_cases_generator(type="random", min_node_number=3, edge_type_number=2,file_name='random_pairs',number=10000)
+    # test_cases_generator(type="random", min_node_number=3, edge_type_number=2,file_name='random_pairs',number=10000)
 
     #
     # a = generate_all(3, 1)

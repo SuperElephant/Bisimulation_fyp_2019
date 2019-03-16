@@ -7,9 +7,14 @@ import os
 import math
 from tensorflow.examples.tutorials.mnist import input_data
 import pandas as pd
+import argparse
+import sys
+
+DIR_SUMMARY = './ml_algorithm/summary'
+DIR_MODEL = './ml_algorithm/tmp'
 
 class ml:
-    def __init__(self, learning_rate=0.05, epochs=10, batch_size=100, data_path = 'random_pairs.csv',test_train_p=0.1):
+    def __init__(self, learning_rate=0.05, epochs=10, batch_size=100, data_path = './data/test_cases.csv',test_train_p=0.1):
         self.learning_rate = learning_rate
         self.epochs = epochs
         self.batch_size = batch_size
@@ -45,6 +50,11 @@ class ml:
         return [train_g1, test_g1], [train_g2, test_g2], [train_label, test_label]
 
 
+    def clean_old_record(self):
+        for dir in [DIR_MODEL, DIR_SUMMARY]:
+            if tf.gfile.Exists(dir):
+                tf.gfile.DeleteRecursively(dir)
+            tf.gfile.MakeDirs(dir)
 
 
 
@@ -91,7 +101,7 @@ class ml:
         with tf.name_scope('train'):
             train = tf.train.AdamOptimizer(learning_rate=0.01).minimize(loss=loss)
 
-        tf_metric, tf_metric_update = tf.metrics.accuracy(tf.arg_max(logits, 1), tf.arg_max(y, 1), name='metric_acc')
+        tf_metric, tf_metric_update = tf.metrics.accuracy(tf.argmax(logits, 1), tf.argmax(y, 1), name='metric_acc')
 
         tf.summary.scalar('accuracy',tf_metric)
 
@@ -103,19 +113,21 @@ class ml:
 
         with tf.Session() as sess:
             if continue_train:
-                saver.restore(sess,'./tmp/model.ckpt')
+                saver.restore(sess,DIR_MODEL+'/model.ckpt')
             else:
+                self.clean_old_record()
                 # initial
                 sess.run(tf.global_variables_initializer())
 
-            train_writer = tf.summary.FileWriter('./summary/ls_s2_1', sess.graph)
-            test_writer = tf.summary.FileWriter('./summary/ls_s2_1_t')
+            train_writer = tf.summary.FileWriter(DIR_SUMMARY+'/ls_s2_1', sess.graph)
+            test_writer = tf.summary.FileWriter(DIR_SUMMARY+'/ls_s2_1_t')
 
             for epoch in range(self.epochs):
                 sess.run(acc_initializer)
                 loss_p = None
                 for i in range(self.batch_number):
-                    _, loss_p, summary = sess.run([train, loss, merged_summary], feed_dict={g1: self.g1_dfs[0][i], g2: self.g2_dfs[0][i], y:self.label_dfs[0][i]})
+                    _, loss_p, summary = sess.run([train, loss, merged_summary],
+                                                  feed_dict={g1: self.g1_dfs[0][i], g2: self.g2_dfs[0][i], y:self.label_dfs[0][i]})
                     sess.run(tf_metric_update, feed_dict={g1:self.g1_dfs[1], g2:self.g2_dfs[1],y:self.label_dfs[1]})
                     test_writer.add_summary(summary,epoch)
                 # if epoch % 5 == 0:
@@ -123,11 +135,39 @@ class ml:
                 acc = sess.run(tf_metric)
                 log_str = "Epoch %d \t Loss=%.4g \t Accuracy=%.4g"
                 print(log_str % (epoch, loss_p, acc))
-                saver.save(sess,'./tmp/model.ckpt')
+                saver.save(sess,DIR_MODEL+'/model.ckpt')
 
         train_writer.close()
         test_writer.close()
 
 if __name__ == "__main__":
-    a = ml(epochs=100)
-    a.fc()
+    os.chdir(os.path.join(os.path.dirname(__file__), os.path.pardir))
+    # a = ml(epochs=10)
+    # a.fc()
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-e", "--epoch", type=int, default=10, dest="epoch",
+                        help="Number of training epochs")
+    parser.add_argument("-l", "--learning_rate", type=float, default=0.01, dest="learning_rate",
+                        help='Initial learning rate')
+    parser.add_argument("-b", "--batch_size", type=int, default=100, dest="batch_size",
+                        help="Number of data for one batch")
+    parser.add_argument("-p", "--data_path", default="./data/test_cases.csv", dest="data_path",
+                        help="Path to input data")
+    parser.add_argument("-r", "--test_train_rate", type=float, default=0.1, dest="test_train_rate",
+                        help="The rate of test cases and train cases")
+    parser.add_argument("-c", "--continue", type=bool, default = False, dest="continue_train",
+                        help="Continue last training")
+    args = parser.parse_args()
+    # print args
+
+    trainer = ml(learning_rate=args.learning_rate,
+                 epochs=args.epoch,
+                 batch_size=args.batch_size,
+                 data_path=args.data_path)
+
+    trainer.fc(args.continue_train)
+
+
+
+    # self, learning_rate=0.05, epochs=10, batch_size=100, data_path = 'random_pairs.csv',test_train_p=0.1
