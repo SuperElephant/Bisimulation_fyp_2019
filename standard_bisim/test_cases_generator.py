@@ -15,36 +15,37 @@ import visualization as vi
 import os
 import argparse
 
-def test_cases_generator(type = "random", number = 100, file_name = "test_cases",
+
+def test_cases_generator(type="random", number=100, file_name="test_cases",
                          min_node_number=5, edge_type_number=3, probability=0.5, p_rate=0.5):
-    labels = [chr(97+i) for i in xrange(edge_type_number)]
+    labels = [chr(97 + i) for i in xrange(edge_type_number)]
     if not os.access('./data/', os.R_OK):
         os.mkdir('./data/')
-    with open('./data/'+file_name+'.csv', 'w') as csvfile:
+    with open('./data/' + file_name + '.csv', 'w') as csvfile:
         if type == 'random':
-            fieldnames = ['g1','g2','bis']
-            writer = csv.DictWriter(csvfile, fieldnames = fieldnames)
+            fieldnames = ['g1', 'g2', 'bis']
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writeheader()
 
             for _ in xrange(number):
                 print(_)
                 g1 = ''
                 while not g1 or not nx.is_weakly_connected(g1):
-                    g1 = random_labeled_digraph(min_node_number,edge_type_number,random.random()*probability)
-                g1_bin = get_bin_array_from_graph(g1,min_node_number,edge_type_number)
+                    g1 = random_labeled_digraph(min_node_number, edge_type_number, random.random() * probability)
+                g1_bin = get_bin_array_from_graph(g1, min_node_number, edge_type_number)
                 bis = 1
                 if random.random() > p_rate:
-                    g2 = generate_random_similar(g1,edge_type_number)
+                    g2 = generate_random_similar(g1, edge_type_number)
                 else:
-                    g2 = random_labeled_digraph(min_node_number,edge_type_number,random.random()*probability)
+                    g2 = random_labeled_digraph(min_node_number, edge_type_number, random.random() * probability)
                     k = bi.BisimPnT(labels, g1, g2)
                     bis = int(k.is_bisimilar())
-                g2_bin = get_bin_array_from_graph(g2,min_node_number,edge_type_number)
-                writer.writerow({fieldnames[0]:g1_bin, fieldnames[1]:g2_bin, fieldnames[2]:bis})
+                g2_bin = get_bin_array_from_graph(g2, min_node_number, edge_type_number)
+                writer.writerow({fieldnames[0]: g1_bin, fieldnames[1]: g2_bin, fieldnames[2]: bis})
 
         elif type == 'all':
-            fieldnames = ['g','type']
-            writer = csv.DictWriter(csvfile, fieldnames = fieldnames)
+            fieldnames = ['g', 'type']
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writeheader()
 
             g = generate_all(min_node_number, edge_type_number)
@@ -52,23 +53,23 @@ def test_cases_generator(type = "random", number = 100, file_name = "test_cases"
             try:
                 while True:
                     graph = g.next()
-                    graph_bin = get_bin_array_from_graph(graph,min_node_number,edge_type_number)
+                    graph_bin = get_bin_array_from_graph(graph, min_node_number, edge_type_number)
                     c.next()
                     type = c.send(graph)
-                    writer.writerow({fieldnames[0]:graph_bin, fieldnames[1]:str(type)})
-            except StopIteration: pass
+                    writer.writerow({fieldnames[0]: graph_bin, fieldnames[1]: str(type)})
+            except StopIteration:
+                pass
 
-
-            g = generate_all(2,1)
+            g = generate_all(2, 1)
             c = classify_graphs(["a"])
             try:
                 while True:
                     gr = g.next()
                     c.next()
                     t = c.send(gr)
-                    print get_bin_array_from_graph(gr,2,1) + " " + str(t)
-            except StopIteration: pass
-
+                    print get_bin_array_from_graph(gr, 2, 1) + " " + str(t)
+            except StopIteration:
+                pass
 
 
 @contextmanager
@@ -120,6 +121,7 @@ def random_relabel_nodes(graph):
     result_graph = nx.relabel_nodes(graph, {i: t[i] for i in xrange(n)})
     return result_graph
 
+
 def generate_all(node_number=5, edge_number=3):
     # graphs = []
     for graph_code in xrange(pow(2, node_number * node_number * edge_number)):
@@ -133,23 +135,23 @@ def generate_all(node_number=5, edge_number=3):
 
 
 # def classify_graphs(graphs, labels):
-    # all_min = []
-    # classified = []
-    # for graph in graphs:
-    #     exist = False
-    #     t = bi.BisimPnT(labels, graph)
-    #     min_graph = t.get_min_graph()
-    #     for i in xrange(len(all_min)):
-    #         if graph_equal(all_min[i], min_graph):
-    #             # vi.plot_graph(all_min[i],'inlist')
-    #             # vi.plot_graph(min_graph, 'newgene')
-    #             classified[i].append(graph)
-    #             exist = True
-    #             break
-    #     if not exist:
-    #         all_min.append(min_graph)
-    #         classified.append([graph])
-    # return classified
+# all_min = []
+# classified = []
+# for graph in graphs:
+#     exist = False
+#     t = bi.BisimPnT(labels, graph)
+#     min_graph = t.get_min_graph()
+#     for i in xrange(len(all_min)):
+#         if graph_equal(all_min[i], min_graph):
+#             # vi.plot_graph(all_min[i],'inlist')
+#             # vi.plot_graph(min_graph, 'newgene')
+#             classified[i].append(graph)
+#             exist = True
+#             break
+#     if not exist:
+#         all_min.append(min_graph)
+#         classified.append([graph])
+# return classified
 
 def classify_graphs(labels):
     all_min = []
@@ -168,7 +170,7 @@ def classify_graphs(labels):
                 break
         if not exist:
             all_min.append(min_graph)
-            yield len(all_min)-1
+            yield len(all_min) - 1
 
 
 def graph_equal(graph_a, graph_b):
@@ -185,7 +187,7 @@ def get_graph_from(graph_code, node_number, edge_types):
     elif diff < 0:
         graph_string = graph_string[0:node_number * tuple_length]
 
-    bin_array = map(int,list(graph_string[::-1]))
+    bin_array = map(int, list(graph_string[::-1]))
 
     # tuples = []
     # for i in xrange(len(graph_string)):
@@ -193,7 +195,7 @@ def get_graph_from(graph_code, node_number, edge_types):
     #         tuples.append((i / tuple_length,
     #                        i % tuple_length / edge_types,
     #                        dict(label=chr(97 + i % tuple_length % edge_types))))
-    return get_graph_from_bin_array(bin_array,node_number,edge_types)
+    return get_graph_from_bin_array(bin_array, node_number, edge_types)
 
 
 def get_graph_from_bin_array(bin_array, node_number, edge_types):
@@ -206,17 +208,17 @@ def get_graph_from_bin_array(bin_array, node_number, edge_types):
                            dict(label=chr(97 + i % tuple_length % edge_types))))
     return nx.MultiDiGraph(tuples)
 
+
 def get_bin_array_from_graph(graph, node_number, edge_types):
     tuple_length = node_number * edge_types
-    bin_array = [0]*tuple_length*node_number
+    bin_array = [0] * tuple_length * node_number
     for edge in graph.edges(data=True):
-        bin_array[edge[0]*tuple_length
-                  + edge[1]*edge_types
+        bin_array[edge[0] * tuple_length
+                  + edge[1] * edge_types
                   + ord(edge[2]['label']) - 97] = 1
     # return ''.join(map(str,bin_array))
     # return bin_array
     return str(bin_array)[1:-1]
-
 
 
 def random_labeled_digraph(node_number, edge_types_number, p):
@@ -237,19 +239,18 @@ def random_labeled_digraph(node_number, edge_types_number, p):
             for e in range(edge_types_number):
                 if random.random() < p:
                     # if any(label == chr(97+e) for label in G.get_edge_data(v,w)):
-                    G.add_edge(v, w, label=chr(97+e))
+                    G.add_edge(v, w, label=chr(97 + e))
 
     return G
 
 
 if __name__ == '__main__':
-
     print os.getcwd()
     os.chdir(os.path.join(os.path.dirname(__file__), os.path.pardir))
     print os.getcwd()
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-t', '--type', type=str, choices=('random','all'),default='random', dest='type',
+    parser.add_argument('-t', '--type', type=str, choices=('random', 'all'), default='random', dest='type',
                         help='Type of data set')
     parser.add_argument('-n', '--number', type=int, default=10, dest='number',
                         help='The length of data set')
@@ -274,9 +275,6 @@ if __name__ == '__main__':
                          p_rate=args.p_rate,
                          probability=args.probability
                          )
-
-
-
 
     # type = "random", number = 100, file_name = "test_cases",
     # min_node_number=5, edge_type_number=3, probability=0.5
@@ -307,7 +305,6 @@ if __name__ == '__main__':
     # for i in range(0, 392, 30):
     #     vi.plot_graph(a[i], "test_case" + str(i))
     # print len(a)
-
 
 #
 #     # G = random_labeled_digraph(5,3,0.1)
