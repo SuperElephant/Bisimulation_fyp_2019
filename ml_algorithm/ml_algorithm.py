@@ -9,16 +9,17 @@ import argparse
 import sys
 
 DIR_SUMMARY = './ml_algorithm/summary'
-DIR_MODEL = './ml_algorithm/tmp'
+DIR_MODEL = './ml_algorithm/model'
 
 
-class ml:
+class ML:
     def __init__(self, learning_rate=0.05, epochs=10, batch_size=100,
-                 data_path='./data/test_cases.csv', test_train_p=0.1):
+                 data_path='./data/test_cases.csv', test_train_p=0.1, model_name = "ls_s2_1"):
         self.learning_rate = learning_rate
         self.epochs = epochs
         self.batch_size = batch_size
         self.data_path = data_path
+        self.model_name = model_name
         self.g1_dfs, self.g2_dfs, self.label_dfs = self.data_process(data_path, test_train_p)
 
     def to_dtype(self, df, dtype):
@@ -27,6 +28,7 @@ class ml:
         return df
 
     def data_process(self, path, test_train_p=0.1):
+        print('loading file: ' + path)
         df = pd.read_csv(path, header=0)
         self.batch_number = int(df.shape[0] * (1 - test_train_p) / self.batch_size + 1)
 
@@ -50,12 +52,16 @@ class ml:
         return [train_g1, test_g1], [train_g2, test_g2], [train_label, test_label]
 
     def clean_old_record(self):
-        for dir in [DIR_MODEL, DIR_SUMMARY]:
+        for dir in [DIR_MODEL + '/' + self.model_name ,
+                    DIR_SUMMARY + '/' + self.model_name,
+                    DIR_SUMMARY + '/' + self.model_name + '_g']:
             if tf.gfile.Exists(dir):
                 tf.gfile.DeleteRecursively(dir)
             tf.gfile.MakeDirs(dir)
 
     def fc(self, continue_train=False):
+        small_layer_number = int(math.log(self.tupe_length) * 5)
+        # print small_layer_number, self.tupe_length
         with tf.name_scope('input'):
             g1 = tf.placeholder(tf.float32, [None, self.tupe_length])
             g2 = tf.placeholder(tf.float32, [None, self.tupe_length])
@@ -68,7 +74,7 @@ class ml:
                                             bias_initializer=tf.random_normal_initializer(),
                                             name='dence1')
 
-                g1_s_dence1 = tf.layers.dense(g1_dence1, int(math.log(self.tupe_length) * 5), activation=tf.nn.relu,
+                g1_s_dence1 = tf.layers.dense(g1_dence1, small_layer_number, activation=tf.nn.relu,
                                               kernel_initializer=tf.random_normal_initializer(),
                                               bias_initializer=tf.random_normal_initializer(),
                                               name='s_dence1')
@@ -79,20 +85,21 @@ class ml:
                                             name='dence1',
                                             reuse=True)
 
-                g2_s_dence1 = tf.layers.dense(g2_dence1, int(math.log(self.tupe_length) * 5), activation=tf.nn.relu,
+                g2_s_dence1 = tf.layers.dense(g2_dence1, small_layer_number, activation=tf.nn.relu,
                                               name='s_dence1',
                                               reuse=True)
         with tf.name_scope('merge'):
             two_graphs = tf.concat([g1_s_dence1, g2_s_dence1], 1)
-            merge_layer = tf.layers.dense(two_graphs, int(math.log(self.tupe_length) * 5), activation=tf.nn.relu,
+            merge_layer = tf.layers.dense(two_graphs, small_layer_number, activation=tf.nn.relu,
                                           kernel_initializer=tf.random_normal_initializer(),
                                           bias_initializer=tf.random_normal_initializer())
         with tf.name_scope('logits'):
-            logits = tf.layers.dense(merge_layer, 2, activation=tf.nn.softmax,
+            logits = tf.layers.dense(merge_layer, 2, activation=tf.identity,
                                      kernel_initializer=tf.random_normal_initializer(),
                                      bias_initializer=tf.random_normal_initializer())
         with tf.name_scope('loss'):
             loss = tf.losses.softmax_cross_entropy(y, logits)
+            # loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits,labels=y))
             tf.summary.scalar('loss', loss)
 
         global_step = tf.Variable(0, trainable=False, name='global_step')
@@ -114,14 +121,16 @@ class ml:
 
         with tf.Session() as sess:
             if continue_train:
-                saver.restore(sess, DIR_MODEL + '/model.ckpt')
+                saver.restore(sess, DIR_MODEL + '/' + self.model_name + '/model.ckpt')
+                print('continue training, model loaded')
             else:
                 self.clean_old_record()
+                print('new training, old record cleaned')
                 # initial
                 sess.run(tf.global_variables_initializer())
 
-            train_writer = tf.summary.FileWriter(DIR_SUMMARY + '/ls_s2_1', sess.graph)
-            test_writer = tf.summary.FileWriter(DIR_SUMMARY + '/ls_s2_1_t')
+            train_writer = tf.summary.FileWriter(DIR_SUMMARY + '/' + self.model_name + '_g', sess.graph)
+            test_writer = tf.summary.FileWriter(DIR_SUMMARY + '/' + self.model_name)
 
             for epoch in range(self.epochs):
                 sess.run(acc_initializer)
@@ -134,12 +143,12 @@ class ml:
                     sess.run(tf_metric_update, feed_dict={g1: self.g1_dfs[1], g2: self.g2_dfs[1], y: self.label_dfs[1]})
                     test_writer.add_summary(summary, g_step)
 
-                # if epoch % 5 == 0:
-                # summary,acc = sess.run([merged_summary ,tf_metric])
-                acc = sess.run(tf_metric)
-                log_str = "Epoch %d \t Loss=%.4g \t Accuracy=%.4g \t G_step %d"
-                print(log_str % (epoch, loss_p, acc, g_step))
-                saver.save(sess, DIR_MODEL + '/model.ckpt')
+                if epoch % 10 == 0:
+                    # summary,acc = sess.run([merged_summary ,tf_metric])
+                    acc = sess.run(tf_metric)
+                    log_str = "Epoch %d \t Loss=%f \t Accuracy=%f \t G_step %d"
+                    print(log_str % (epoch, loss_p, acc, g_step))
+                    saver.save(sess, DIR_MODEL + '/' + self.model_name + '/model.ckpt')
 
         train_writer.close()
         test_writer.close()
@@ -147,14 +156,14 @@ class ml:
 
 if __name__ == "__main__":
     os.chdir(os.path.join(os.path.dirname(__file__), os.path.pardir))
-    # a = ml(epochs=10)
+    # a = ML(epochs=10)
     # a.fc()
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-e", "--epoch", type=int, default=10, dest="epoch",
+    parser.add_argument("-e", "--epoch", type=int, default=100, dest="epoch",
                         help="Number of training epochs")
-    parser.add_argument("-l", "--learning_rate", type=float, default=0.01, dest="learning_rate",
-                        help='Initial learning rate')
+    parser.add_argument("-l", "--learning_rate", type=float, default=0.05, dest="learning_rate",
+                        help="Initial learning rate")
     parser.add_argument("-b", "--batch_size", type=int, default=100, dest="batch_size",
                         help="Number of data for one batch")
     parser.add_argument("-p", "--data_path", default="./data/test_cases.csv", dest="data_path",
@@ -163,13 +172,16 @@ if __name__ == "__main__":
                         help="The rate of test cases and train cases")
     parser.add_argument("-c", "--continue", type=bool, default=False, dest="continue_train",
                         help="Continue last training")
+    parser.add_argument("-n", "--model_name", type=str, default="ls_s2", dest="model_name",
+                        help="The name of the model")
     args = parser.parse_args()
     # print args
-
-    trainer = ml(learning_rate=args.learning_rate,
+    print("=============== star training ===============")
+    trainer = ML(learning_rate=args.learning_rate,
                  epochs=args.epoch,
                  batch_size=args.batch_size,
-                 data_path=args.data_path)
+                 data_path=args.data_path,
+                 model_name=args.model_name)
 
     trainer.fc(args.continue_train)
 
