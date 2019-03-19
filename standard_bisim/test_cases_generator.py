@@ -22,13 +22,14 @@ def test_cases_generator(type="random", number=100, file_name="test_cases",
     if not os.access('./data/', os.R_OK):
         os.mkdir('./data/')
     with open('./data/' + file_name + '.csv', 'w') as csvfile:
+        print('write in path: ' + './data/' + file_name + '.csv')
         if type == 'random':
             fieldnames = ['g1', 'g2', 'bis']
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writeheader()
 
             for _ in xrange(number):
-                print(_)
+                if _%100 == 0 : print("generating # %d" % (_))
                 g1 = ''
                 while not g1 or not nx.is_weakly_connected(g1):
                     g1 = random_labeled_digraph(min_node_number, edge_type_number, random.random() * probability)
@@ -94,9 +95,9 @@ def generate_random_similar(graph, edge_type_number):
         if min_node_number == node_number:
             return random_relabel_nodes(graph)
         for i in xrange(min_node_number, node_number):
-            # print(min_node_number)
             partition[random.randint(0, min_node_number - 1)].add(i)
         result_graph = None
+        # print min_node_number, node_number
         while not result_graph or result_graph.order() != graph.order():
             result_graph = nx.MultiDiGraph()
             for start_node_type in xrange(min_node_number):
@@ -245,14 +246,12 @@ def random_labeled_digraph(node_number, edge_types_number, p):
 
 
 if __name__ == '__main__':
-    print os.getcwd()
     os.chdir(os.path.join(os.path.dirname(__file__), os.path.pardir))
-    print os.getcwd()
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-t', '--type', type=str, choices=('random', 'all'), default='random', dest='type',
                         help='Type of data set')
-    parser.add_argument('-n', '--number', type=int, default=10, dest='number',
+    parser.add_argument('-n', '--number', type=int, default=1000, dest='number',
                         help='The length of data set')
     parser.add_argument('-f', '--file_name', type=str, default='test_cases', dest='file_name',
                         help='Name of the output file')
@@ -267,6 +266,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     # print args
 
+    print("=============== strat generating data ===============")
     test_cases_generator(type=args.type,
                          number=args.number,
                          min_node_number=args.node_number,

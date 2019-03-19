@@ -70,6 +70,13 @@ class BisimPnT:
         for block_x in partition_X:
             if self.is_compound_to(block_x, partition_Q) is not False:
                 block_set_C.append(block_x)
+            # i=0
+            # for block in partition_Q:
+            #     if block.issubset(block_x):
+            #         i += 1
+            #     if i==2:
+            #         block_set_C.append(block_x)
+            #         break
         return block_set_C
 
     def is_compound_to(self, block_s, partition):
@@ -85,38 +92,6 @@ class BisimPnT:
                     else:
                         return contained_blocks[1]
         return False
-
-    # def plotDiGraph(self, blocks, graph=None, labels=None, pos=None):
-    #     if not graph:
-    #         graph = self.full_graph_U
-    #     if not labels:
-    #         labels = self.labels
-    #     numOfActions = len(labels)
-    #     numOfBlocks = len(blocks)
-    #
-    #     plt.figure(1)
-    #
-    #     if not pos:
-    #         pos = nx.spring_layout(graph)
-    #
-    #     for i in xrange(numOfBlocks):
-    #         nx.draw_networkx_nodes(graph, pos, nodelist=blocks[i], node_color=[i] * len(blocks[i]),
-    #                                cmap=cm.BrBG, vmin=-1, vmax=numOfBlocks)
-    #     for i in xrange(numOfActions):
-    #         acts = []
-    #
-    #         for edge in graph.edges():
-    #             if (graph.get_edge_data(*edge)["label"] == labels[i]):
-    #                 acts.append(edge)
-    #
-    #         nx.draw_networkx_edges(graph, pos, edgelist=acts, edge_color=[i] * len(acts),
-    #                                edge_cmap=cm.rainbow, edge_vmin=-1, edge_vmax=numOfActions,
-    #                                width=2.0, arrowsize=20)
-    #     plt.show()
-    #
-    # def plotMultiDiGraph(self, blocks):
-    #     print(blocks)
-    #     pass
 
     def coarsest_partition(self, plot=False):
 
@@ -142,7 +117,7 @@ class BisimPnT:
 
             # if the rest is still not simple, put it back to C
             if self.is_compound_to(block_s - block_b, partition_Q) is not False:
-                block_set_C.append(block_s - block_b)
+                block_set_C.append(block_s)
 
             for label in self.labels:
 
@@ -159,7 +134,7 @@ class BisimPnT:
                     block_d1 = block_d.intersection(preimage_b)
                     block_d2 = block_d - block_d1
                     block_d11 = block_d1.intersection(preimage_s_sub_b)
-                    block_d12 = block_d - preimage_s_sub_b
+                    block_d12 = block_d1 - preimage_s_sub_b
 
                     if len(block_d2) and block_d2 not in new_partition_Q:
                         new_partition_Q.append(block_d2)
@@ -217,31 +192,35 @@ class BisimPnT:
 
 if __name__ == '__main__':
     # # the following is the bisimulation example:
-    # # exanple 1:
-    # G = nx.DiGraph()
+    # # =============== exanple 1 ===============
+    # G = nx.MultiDiGraph()
     # G.add_edge(5, 2, label='a')
     # G.add_edge(2, 3, label='b')
     # G.add_edge(2, 4, label='b')
     #
-    # H = nx.DiGraph()
+    # H = nx.MultiDiGraph()
     # H.add_edge(1, 2, label='a')
     # H.add_edge(1, 4, label='a')
     # H.add_edge(2, 3, label='b')
     # H.add_edge(4, 5, label='b')
     #
-    # labels = ['a', 'b', 'c']
+    # labels = ['a', 'b']
     # k = BisimPnT(labels, G, H)
+    # par = k.coarsest_partition()
+    # vi.plot_graph_with_partition(k.full_graph_U,par,'example_1')
+    # vi.plot_graph(BisimPnT(labels,H).get_min_graph(), 'mini_g')
     # print("Example 1: ")
+    # print(par)
     # print(k.is_bisimilar())
 
-    # # example 2
-    # G = nx.DiGraph()
+    # # =============== example 2 ===============
+    # G = nx.MultiDiGraph()
     # G.add_edge(1, 2, label='a')
     # G.add_edge(2, 3, label='a')
     # G.add_edge(2, 1, label='b')
     # G.add_edge(3, 2, label='b')
     #
-    # H = nx.DiGraph()
+    # H = nx.MultiDiGraph()
     # H.add_edge(1, 2, label='a')
     # H.add_edge(1, 3, label='a')
     # H.add_edge(2, 4, label='a')
@@ -253,17 +232,18 @@ if __name__ == '__main__':
     #
     # labels = ['a', 'b']
     # k = BisimPnT(labels, G, H)
+    # vi.plot_graph_with_partition(k.full_graph_U,k.coarsest_partition(), 'example_2')
     # print("Example 2: ")
     # print(k.is_bisimilar())
-    #
-    #
-    # # example 3
+
+
+    # # =============== example 3 ===============
     # G = nx.MultiDiGraph()
     # G.add_edge(1, 3, label='a')
     # G.add_edge(1, 2, label='a')
     # G.add_edge(2, 3, label='b')
     # G.add_edge(3, 1, label='c')
-    # G.add_edge(3, 2, label='b')
+    # G.add_edge(3, 2, label='c')
     #
     # H = nx.MultiDiGraph()
     # H.add_edge(1, 3, label='a')
@@ -277,9 +257,11 @@ if __name__ == '__main__':
     #
     # labels = ['a', 'b', 'c']
     # k = BisimPnT(labels, G, H)
+    # vi.plot_graph_with_partition(k.full_graph_U,k.coarsest_partition(), 'example_3')
     # print("Example 3: ")
     # print(k.is_bisimilar())
 
+    # # =============== example 4 ===============
     # H = nx.MultiDiGraph()
     # H.add_edge(1, 3, label='a')
     # H.add_edge(1, 4, label='a')
@@ -292,24 +274,27 @@ if __name__ == '__main__':
     #
     # labels = ['a', 'b', 'c']
     # k = BisimPnT(labels, H)
-    # print(k.coarsest_partition(True))
+    # par = k.coarsest_partition()
+    # print(par)
+    # vi.plot_graph_with_partition(k.full_graph_U,par, 'raw')
     # t = k.get_min_graph()
-    # vi.plot_graph_with_partition(t[0], t[1], 'test_min')
+    # vi.plot_graph(t,'min_g')
 
-    a = nx.MultiDiGraph()
-    a.add_edge(0, 0, label='b')
-    a.add_edge(0, 0, label='a')
-    a.add_edge(1, 0, label='a')
-    a.add_edge(1, 1, label='b')
-    a.add_edge(2, 1, label='a')
-    a.add_edge(2, 1, label='b')
-    a.add_edge(2, 2, label='a')
-    a.add_edge(2, 0, label='b')
-
-    k = BisimPnT(['a', 'b'], a)
-    vi.plot_graph(a, 'raw')
-    par = k.coarsest_partition()
-    print(par)
-    vi.plot_graph_with_partition(a, par, 'with_p')
-    min_g = k.get_min_graph()
-    vi.plot_graph(min_g, 'min')
+    # # =============== example 5 ===============
+    # a = nx.MultiDiGraph()
+    # a.add_edge(0, 0, label='a')
+    # a.add_edge(0, 2, label='b')
+    # a.add_edge(1, 0, label='b')
+    # a.add_edge(3, 0, label='a')
+    # a.add_edge(3, 3, label='c')
+    # a.add_edge(4, 4, label='a')
+    # a.add_edge(4, 1, label='c')
+    #
+    # k = BisimPnT(['a', 'b', 'c'], a)
+    # vi.plot_graph(a, 'raw')
+    # par = k.coarsest_partition()
+    # print(par)
+    # vi.plot_graph_with_partition(a, par, 'with_p')
+    # min_g = k.get_min_graph()
+    # vi.plot_graph(min_g, 'min')
+    pass
