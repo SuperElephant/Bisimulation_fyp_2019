@@ -8,4 +8,4 @@ venv/
 .idea/
 
 # files
-bisim_PnT_hof.py
+*.pyc
