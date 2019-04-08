@@ -197,14 +197,17 @@ if __name__ == '__main__':
     # G.add_edge(5, 2, label='a')
     # G.add_edge(2, 3, label='b')
     # G.add_edge(2, 4, label='b')
+    # # G.add_edge(2, 4, label='c')
     #
     # H = nx.MultiDiGraph()
     # H.add_edge(1, 2, label='a')
     # H.add_edge(1, 4, label='a')
     # H.add_edge(2, 3, label='b')
     # H.add_edge(4, 5, label='b')
+    # # H.add_edge(4, 5, label='c')
     #
     # labels = ['a', 'b']
+    # # labels = ['a', 'b', 'c']
     # k = BisimPnT(labels, G, H)
     # par = k.coarsest_partition()
     # vi.plot_graph_with_partition(k.full_graph_U,par,'example_1')
