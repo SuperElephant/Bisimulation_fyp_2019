@@ -29,7 +29,7 @@ def test_cases_generator(c_type="random", number=100, file_name="test_cases",
             writer.writeheader()
 
             for _ in xrange(number):
-                if _ % 100 == 0: print("generating # %d" % _)
+                if _ % (number/10) == 0: print("generating # %d" % _)
                 g1 = ''
                 while not g1 or not nx.is_weakly_connected(g1):
                     g1 = random_labeled_digraph(min_node_number, edge_type_number, random.random() * probability)

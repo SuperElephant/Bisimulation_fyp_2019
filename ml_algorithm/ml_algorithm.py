@@ -60,6 +60,7 @@ class ML:
             tf.gfile.MakeDirs(dir)
 
     def fc(self, continue_train=False):
+        tf.reset_default_graph()
         small_layer_number = int(math.log(self.tupe_length) * 5)
         # print small_layer_number, self.tupe_length
         with tf.name_scope('input'):
