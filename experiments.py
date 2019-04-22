@@ -40,7 +40,7 @@ if __name__ == '__main__':
     graph_density =0.5
 
     print("========== wide test ==========")
-    graph_density_s = numpy.arange(0,1,0.1)
+    graph_density_s = numpy.arange(0.1,1,0.1)
     print("---- ARGUMENTS ----\n"
           "nodes_num = %s \n"
           "edge_type_num = %s \n"
@@ -64,7 +64,7 @@ if __name__ == '__main__':
           "graph_density = %s\n"
           "p_rate = %s \n"
           "-------------------"
-          % (nodes_num, edge_type_num, c_type, case_number, graph_density_s, p_rate))
+          % (nodes_num, edge_type_num, c_type, case_number, graph_density, p_rate))
     for nodes_num in nodes_num_s:
         experiment(c_type, nodes_num, edge_type_num, case_number, graph_density, p_rate)
 
