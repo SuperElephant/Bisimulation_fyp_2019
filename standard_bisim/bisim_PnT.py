@@ -191,8 +191,8 @@ class BisimPnT:
 
 
 if __name__ == '__main__':
-    # # the following is the bisimulation example:
-    # # =============== exanple 1 ===============
+    # the following is the bisimulation example:
+    # =============== example 1 ===============
     # G = nx.MultiDiGraph()
     # G.add_edge(5, 2, label='a')
     # G.add_edge(2, 3, label='b')
@@ -208,6 +208,7 @@ if __name__ == '__main__':
     #
     # labels = ['a', 'b']
     # # labels = ['a', 'b', 'c']
+    #
     # k = BisimPnT(labels, G, H)
     # par = k.coarsest_partition()
     # vi.plot_graph_with_partition(k.full_graph_U,par,'example_1')
@@ -236,6 +237,7 @@ if __name__ == '__main__':
     # labels = ['a', 'b']
     # k = BisimPnT(labels, G, H)
     # vi.plot_graph_with_partition(k.full_graph_U,k.coarsest_partition(), 'example_2')
+    # vi.plot_graph(BisimPnT(labels, H).get_min_graph(), 'mini_g2')
     # print("Example 2: ")
     # print(k.is_bisimilar())
 
@@ -261,6 +263,7 @@ if __name__ == '__main__':
     # labels = ['a', 'b', 'c']
     # k = BisimPnT(labels, G, H)
     # vi.plot_graph_with_partition(k.full_graph_U,k.coarsest_partition(), 'example_3')
+    # vi.plot_graph(BisimPnT(labels, H).get_min_graph(), 'mini_g3')
     # print("Example 3: ")
     # print(k.is_bisimilar())
 

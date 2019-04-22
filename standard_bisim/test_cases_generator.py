@@ -16,20 +16,20 @@ import os
 import argparse
 
 
-def test_cases_generator(type="random", number=100, file_name="test_cases",
+def test_cases_generator(c_type="random", number=100, file_name="test_cases",
                          min_node_number=5, edge_type_number=3, probability=0.5, p_rate=0.5):
     labels = [chr(97 + i) for i in xrange(edge_type_number)]
     if not os.access('./data/', os.R_OK):
         os.mkdir('./data/')
     with open('./data/' + file_name + '.csv', 'w') as csvfile:
         print('write in path: ' + './data/' + file_name + '.csv')
-        if type == 'random':
+        if c_type == 'random':
             fieldnames = ['g1', 'g2', 'bis']
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writeheader()
 
             for _ in xrange(number):
-                if _%100 == 0 : print("generating # %d" % (_))
+                if _ % 100 == 0: print("generating # %d" % _)
                 g1 = ''
                 while not g1 or not nx.is_weakly_connected(g1):
                     g1 = random_labeled_digraph(min_node_number, edge_type_number, random.random() * probability)
@@ -44,33 +44,37 @@ def test_cases_generator(type="random", number=100, file_name="test_cases",
                 g2_bin = get_bin_array_from_graph(g2, min_node_number, edge_type_number)
                 writer.writerow({fieldnames[0]: g1_bin, fieldnames[1]: g2_bin, fieldnames[2]: bis})
 
-        elif type == 'all':
+        elif c_type == 'all':
             fieldnames = ['g', 'type']
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writeheader()
 
             g = generate_all(min_node_number, edge_type_number)
             c = classify_graphs(labels)
+            case_num = -1
             try:
                 while True:
+                    case_num = case_num + 1
+                    if case_num % 100 == 0: print("generating # %d" % case_num)
                     graph = g.next()
                     graph_bin = get_bin_array_from_graph(graph, min_node_number, edge_type_number)
                     c.next()
-                    type = c.send(graph)
-                    writer.writerow({fieldnames[0]: graph_bin, fieldnames[1]: str(type)})
+                    c_type = c.send(graph)
+                    writer.writerow({fieldnames[0]: graph_bin, fieldnames[1]: str(c_type)})
             except StopIteration:
+                print("generating # %d" % case_num)
                 pass
 
-            g = generate_all(2, 1)
-            c = classify_graphs(["a"])
-            try:
-                while True:
-                    gr = g.next()
-                    c.next()
-                    t = c.send(gr)
-                    print get_bin_array_from_graph(gr, 2, 1) + " " + str(t)
-            except StopIteration:
-                pass
+            # g = generate_all(2, 1)
+            # c = classify_graphs(["a"])
+            # try:
+            #     while True:
+            #         gr = g.next()
+            #         c.next()
+            #         t = c.send(gr)
+            #         # print get_bin_array_from_graph(gr, 2, 1) + " " + str(t)
+            # except StopIteration:
+            #     pass
 
 
 @contextmanager
@@ -129,8 +133,7 @@ def generate_all(node_number=5, edge_number=3):
         g = get_graph_from(graph_code, node_number, edge_number)
         if g.order() == node_number and nx.is_weakly_connected(g):
             # graphs.append(g)
-            print(g.edges())
-            print()
+            # print(g.edges())
             yield g
     # return graphs
 
@@ -175,6 +178,8 @@ def classify_graphs(labels):
 
 
 def graph_equal(graph_a, graph_b):
+    if graph_a.order() != graph_b.order() or len(graph_a.edges) != len(graph_b.edges):
+        return False
     em = iso.categorical_multiedge_match('label', '#')
     return nx.is_isomorphic(graph_a, graph_b, edge_match=em)
 
@@ -249,7 +254,7 @@ if __name__ == '__main__':
     os.chdir(os.path.join(os.path.dirname(__file__), os.path.pardir))
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-t', '--type', type=str, choices=('random', 'all'), default='random', dest='type',
+    parser.add_argument('-t', '--type', type=str, choices=('random', 'all'), default='random', dest='c_type',
                         help='Type of data set')
     parser.add_argument('-n', '--number', type=int, default=1000, dest='number',
                         help='The length of data set')
@@ -267,7 +272,7 @@ if __name__ == '__main__':
     # print args
 
     print("=============== strat generating data ===============")
-    test_cases_generator(type=args.type,
+    test_cases_generator(c_type=args.c_type,
                          number=args.number,
                          min_node_number=args.node_number,
                          edge_type_number=args.edge_type_number,
