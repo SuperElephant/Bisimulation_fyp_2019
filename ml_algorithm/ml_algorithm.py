@@ -107,14 +107,19 @@ class ML:
         with tf.name_scope('train'):
             train = tf.train.AdamOptimizer(learning_rate=0.01).minimize(loss=loss, global_step=global_step)
 
-        tf_metric, tf_metric_update = tf.metrics.accuracy(tf.argmax(logits, 1), tf.argmax(y, 1), name='metric_acc')
-        tf.summary.scalar('accuracy', tf_metric)
-
-
-
+        acc_metric, acc_metric_update = tf.metrics.accuracy(tf.argmax(logits, 1), tf.argmax(y, 1), name='metric_acc')
+        pre_metric, pre_metric_update = tf.metrics.precision(tf.argmax(logits, 1), tf.argmax(y, 1), name='metric_pre')
+        recall_metric, recall_metric_update = tf.metrics.recall(tf.argmax(logits, 1), tf.argmax(y, 1), name='metric_recall')
+        tf.summary.scalar('accuracy', acc_metric)
+        tf.summary.scalar('precision', pre_metric)
+        tf.summary.scalar('recall', recall_metric)
 
         metric_acc_var = tf.get_collection(tf.GraphKeys.LOCAL_VARIABLES, scope="metric_acc")
         acc_initializer = tf.variables_initializer(var_list=metric_acc_var)
+        metric_pre_var = tf.get_collection(tf.GraphKeys.LOCAL_VARIABLES, scope="metric_pre")
+        pre_initializer = tf.variables_initializer(var_list=metric_pre_var)
+        metric_recall_var = tf.get_collection(tf.GraphKeys.LOCAL_VARIABLES, scope="metric_recall")
+        recall_initializer = tf.variables_initializer(var_list=metric_recall_var)
 
         merged_summary = tf.summary.merge_all()
         saver = tf.train.Saver()
@@ -133,21 +138,25 @@ class ML:
             test_writer = tf.summary.FileWriter(DIR_SUMMARY + '/' + self.model_name)
 
             for epoch in range(self.epochs):
-                sess.run(acc_initializer)
+                sess.run([acc_initializer, pre_initializer, recall_initializer])
                 loss_p = None
                 g_step = None
                 for i in range(self.batch_number):
                     _, loss_p, summary, g_step = sess.run([train, loss, merged_summary, global_step],
-                                                  feed_dict={g1: self.g1_dfs[0][i], g2: self.g2_dfs[0][i],
+                                                  feed_dict={g1: self.g1_dfs[0][i],
+                                                             g2: self.g2_dfs[0][i],
                                                              y: self.label_dfs[0][i]})
-                    sess.run(tf_metric_update, feed_dict={g1: self.g1_dfs[1], g2: self.g2_dfs[1], y: self.label_dfs[1]})
+                    sess.run([acc_metric_update, pre_metric_update, recall_metric_update],
+                             feed_dict={g1: self.g1_dfs[1],
+                                        g2: self.g2_dfs[1],
+                                        y: self.label_dfs[1]})
                     test_writer.add_summary(summary, g_step)
 
                 if epoch % 10 == 0:
-                    # summary,acc = sess.run([merged_summary ,tf_metric])
-                    acc = sess.run(tf_metric)
-                    log_str = "Epoch %d \t Loss=%f \t Accuracy=%f \t G_step %d"
-                    print(log_str % (epoch, loss_p, acc, g_step))
+                    # summary,acc = sess.run([merged_summary ,acc_metric])
+                    acc, pre, recall = sess.run([acc_metric, pre_metric, recall_metric])
+                    log_str = "Epoch %d \t G_step %d \t Loss=%f \t Accuracy=%f \t Precision=%f \t Recall=%f "
+                    print(log_str % (epoch, g_step, loss_p, acc, pre, recall))
                     saver.save(sess, DIR_MODEL + '/' + self.model_name + '/model.ckpt')
 
         train_writer.close()
