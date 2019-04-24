@@ -8,8 +8,8 @@ import pandas as pd
 import argparse
 import sys
 
-DIR_SUMMARY = './ml_algorithm/summary'
-DIR_MODEL = './ml_algorithm/model'
+DIR_SUMMARY = './summary'
+DIR_MODEL = './model'
 
 
 class ML:
@@ -54,7 +54,7 @@ class ML:
     def clean_old_record(self):
         for dir in [DIR_MODEL + '/' + self.model_name ,
                     DIR_SUMMARY + '/' + self.model_name,
-                    DIR_SUMMARY + '/' + self.model_name + '_g']:
+                    DIR_SUMMARY + '_g' + '/' + self.model_name ]:
             if tf.gfile.Exists(dir):
                 tf.gfile.DeleteRecursively(dir)
             tf.gfile.MakeDirs(dir)
@@ -135,7 +135,7 @@ class ML:
                 # initial
                 sess.run(tf.global_variables_initializer())
 
-            train_writer = tf.summary.FileWriter(DIR_SUMMARY + '/' + self.model_name + '_g', sess.graph)
+            train_writer = tf.summary.FileWriter(DIR_SUMMARY + '_g' + '/' + self.model_name, sess.graph)
             test_writer = tf.summary.FileWriter(DIR_SUMMARY + '/' + self.model_name)
 
             for epoch in range(self.epochs):

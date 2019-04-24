@@ -6,7 +6,7 @@ import numpy
 
 def experiment(c_type, nodes_num, edge_type_num, case_number, graph_density, p_rate):
     file_name = c_type + "_n" + str(nodes_num) + "_e" + str(edge_type_num) + \
-                "_" + str(case_number) + "_gd" + str(graph_density) + "_p" + str(p_rate)
+                "_" + str(case_number) + "_gd" + str(round(graph_density,3)) + "_p" + str(round(p_rate,3))
     print("training #%d: %s" % (1, file_name))
     cg.test_cases_generator(c_type=c_type,
                             number=case_number,
