@@ -56,6 +56,7 @@ if __name__ == '__main__':
 
     print("========== deep test ==========")
     nodes_num_s = range(3,10)
+    graph_density =0.5
     print("---- ARGUMENTS ----\n"
           "nodes_num = %s \n"
           "edge_type_num = %s \n"
