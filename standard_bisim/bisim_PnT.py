@@ -25,22 +25,22 @@ class BisimPnT:
 
     # return the preimage of the block_s
     def preimage(self, block_s, label=None):
-        preimage = []
+        pre_s = []
         for node in self.full_graph_U.nodes():
             successors = self.full_graph_U.successors(node)
             if label is None:
                 if any((successor in block_s) for successor in successors):
-                    preimage.append(node)
+                    pre_s.append(node)
             elif type(self.full_graph_U) == nx.DiGraph \
                     and any((self.full_graph_U[node][successor]['label'] == label and successor in block_s)
                             for successor in successors):
-                preimage.append(node)
+                pre_s.append(node)
             elif type(self.full_graph_U) == nx.MultiDiGraph \
                     and any((any(edge['label'] == label for edge in self.full_graph_U[node][successor].itervalues())
                              and successor in block_s)
                             for successor in successors):
-                preimage.append(node)
-        return set(preimage)
+                pre_s.append(node)
+        return set(pre_s)
 
     # need change
     def split_block(self, block_b, block_s, label=None):
@@ -128,7 +128,7 @@ class BisimPnT:
                 preimage_s_sub_b = self.preimage(block_s - block_b, label)
 
                 # step 4:
-                # refine Q wirh respect to B
+                # refine Q with respect to B and S-B
                 new_partition_Q = []
                 for block_d in partition_Q:
                     block_d1 = block_d.intersection(preimage_b)
@@ -145,6 +145,8 @@ class BisimPnT:
                     partition_Q = new_partition_Q
 
             block_set_C = self.compound_blocks(partition_Q, partition_X)
+
+            # if needed visualise the result
             if plot:
                 vi.plot_graph_with_partition(self.full_graph_U, partition_Q)
 
@@ -160,22 +162,22 @@ class BisimPnT:
         else:
             G = nx.MultiDiGraph()
 
+
         for n in range(len(partition)):
 
             # for part in partition:
-            possible_type = []
             while partition[n]:
                 node = partition[n].pop()
-                # new_partition.append({n + 1})
                 for successor in self.full_graph_U.successors(node):
                     for i in range(len(partition)):
-                        if successor in self.co_partition[i] and i not in possible_type:
-                            possible_type.append(i)
-                            links = {label.values()[0] for label in
-                                     self.full_graph_U.get_edge_data(node, successor).values()}
+                        if successor in self.co_partition[i] :
+                            links = {exist_type_dic['label'] for exist_type_dic in
+                                     self.full_graph_U.get_edge_data(node,successor, default={0:{'label':'#'}}).values()}
                             for label in links:
-                                G.add_edge(n, i, label=label)
-        # return [G, new_partition]
+                                if label not in {exist_type_dic['label'] for exist_type_dic in
+                                             G.get_edge_data(n,i, default={0:{'label':'#'}}).values()}:
+                                    G.add_edge(n, i, label=label)
+    # return [G, new_partition]
         return G
 
     def is_bisimilar(self):
@@ -206,13 +208,13 @@ if __name__ == '__main__':
     # H.add_edge(4, 5, label='b')
     # # H.add_edge(4, 5, label='c')
     #
-    # labels = ['a', 'b']
-    # # labels = ['a', 'b', 'c']
+    # # labels = ['a', 'b']
+    # labels = ['a', 'b', 'c']
     #
     # k = BisimPnT(labels, G, H)
     # par = k.coarsest_partition()
     # vi.plot_graph_with_partition(k.full_graph_U,par,'example_1')
-    # vi.plot_graph(BisimPnT(labels,H).get_min_graph(), 'mini_g')
+    # vi.plot_graph(BisimPnT(labels,G).get_min_graph(), 'mini_g')
     # print("Example 1: ")
     # print(par)
     # print(k.is_bisimilar())
@@ -248,7 +250,7 @@ if __name__ == '__main__':
     # G.add_edge(1, 2, label='a')
     # G.add_edge(2, 3, label='b')
     # G.add_edge(3, 1, label='c')
-    # G.add_edge(3, 2, label='c')
+    # G.add_edge(3, 2, label='b')
     #
     # H = nx.MultiDiGraph()
     # H.add_edge(1, 3, label='a')
@@ -262,9 +264,11 @@ if __name__ == '__main__':
     #
     # labels = ['a', 'b', 'c']
     # k = BisimPnT(labels, G, H)
-    # vi.plot_graph_with_partition(k.full_graph_U,k.coarsest_partition(), 'example_3')
+    # partition = k.coarsest_partition()
+    # vi.plot_graph_with_partition(k.full_graph_U, partition, 'example_3')
     # vi.plot_graph(BisimPnT(labels, H).get_min_graph(), 'mini_g3')
-    # print("Example 3: ")
+    # print("Example 2: ")
+    # print(partition)
     # print(k.is_bisimilar())
 
     # # =============== example 4 ===============
@@ -282,6 +286,7 @@ if __name__ == '__main__':
     # k = BisimPnT(labels, H)
     # par = k.coarsest_partition()
     # print(par)
+    # vi.plot_graph(k.full_graph_U)
     # vi.plot_graph_with_partition(k.full_graph_U,par, 'raw')
     # t = k.get_min_graph()
     # vi.plot_graph(t,'min_g')
@@ -303,4 +308,41 @@ if __name__ == '__main__':
     # vi.plot_graph_with_partition(a, par, 'with_p')
     # min_g = k.get_min_graph()
     # vi.plot_graph(min_g, 'min')
+
+    # # =============== example 6 ===============
+    # import test_cases_generator as ts
+    # a = nx.MultiDiGraph()
+    # a.add_edge(0, 0, label='b')
+    # a.add_edge(0, 3, label='a')
+    # a.add_edge(0, 3, label='b')
+    # a.add_edge(0, 4, label='a')
+    # a.add_edge(0, 4, label='b')
+    # a.add_edge(1, 0, label='b')
+    # a.add_edge(1, 1, label='a')
+    # a.add_edge(1, 3, label='b')
+    # a.add_edge(1, 4, label='a')
+    # a.add_edge(2, 0, label='b')
+    # a.add_edge(2, 3, label='a')
+    # a.add_edge(2, 3, label='b')
+    # a.add_edge(3, 1, label='b')
+    # a.add_edge(3, 2, label='a')
+    # a.add_edge(3, 4, label='a')
+    # a.add_edge(4, 0, label='a')
+    # a.add_edge(4, 1, label='a')
+    # a.add_edge(4, 1, label='b')
+    # a.add_edge(4, 2, label='a')
+    # a.add_edge(4, 2, label='b')
+    # a.add_edge(4, 3, label='b')
+    # b = ts.generate_random_similar(a,2)
+    #
+    # k = BisimPnT(['a', 'b'], a, b)
+    # vi.plot_graph(a, 'raw')
+    # par = k.coarsest_partition()
+    # print(par)
+    # vi.plot_graph_with_partition(k.full_graph_U, par, 'with_p')
+    # min_g = k.get_min_graph()
+    # vi.plot_graph(min_g, 'min')
+    #
+    #
+
     pass
