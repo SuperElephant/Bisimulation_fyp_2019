@@ -12,8 +12,8 @@ def plot_graph(graph, file_name='test'):
     if not os.path.exists('graphs/'):
         os.makedirs('graphs/')
     write_dot(graph, 'graphs/' + file_name)
-    render('dot', 'png', 'graphs/' + file_name)
-    view('graphs/' + file_name + '.png')
+    render('dot', 'pdf', 'graphs/' + file_name)
+    view('graphs/' + file_name + '.pdf')
 
 
 def plot_graph_with_partition(graph, blocks=None, file_name='test'):
