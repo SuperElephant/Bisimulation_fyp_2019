@@ -106,16 +106,36 @@ def generate_random_similar(graph, edge_type_number):
             result_graph = nx.MultiDiGraph()
             for start_node_type in xrange(min_node_number):
                 for end_node_type in min_graph.successors(start_node_type):  # for each origin type pair
-                    for edge_label in [edge['label'] for edge in
-                                       min_graph.get_edge_data(start_node_type, end_node_type).values()]:
+                    for edge_label in {edge['label'] for edge in
+                                       min_graph.get_edge_data(start_node_type, end_node_type).values()}:
                         # for each type edge
-                        start_nodes = random.sample(partition[start_node_type],
-                                                    random.randint(1, len(partition[start_node_type])))
-                        for star_node in start_nodes:
-                            end_nodes = random.sample(partition[end_node_type],
-                                                      random.randint(1, len(partition[end_node_type])))
-                            for end_node in end_nodes:
-                                result_graph.add_edge(star_node, end_node, label=edge_label)
+                        accept = False
+                        while not accept:
+                            start_nodes = random.sample(partition[start_node_type],
+                                                        random.randint(0, len(partition[start_node_type])))
+                            for start_node in start_nodes:
+                                end_nodes = random.sample(partition[end_node_type],
+                                                          random.randint(0, len(partition[end_node_type])))
+                                for end_node in end_nodes:
+                                    exist_types = {exist_type_dic['label'] for exist_type_dic in
+                                                   result_graph.get_edge_data(start_node,end_node, default={0:{'label':'#'}}).values()}
+                                    if  edge_label not in exist_types:
+                                        result_graph.add_edge(start_node, end_node, label=edge_label)
+                            t1 = partition[start_node_type].copy()
+                            t2 = partition[end_node_type].copy()
+                            for start_node in partition[start_node_type]:
+                                for end_node in partition[end_node_type]:
+                                    exist_types = {exist_type_dic['label'] for exist_type_dic in
+                                                   result_graph.get_edge_data(start_node,end_node, default={0:{'label':'#'}}).values()}
+                                    if edge_label in exist_types:
+                                    # if result_graph.get_edge_data(start_node,end_node,
+                                    #                               default={0:{'label':'#'}})[0]['label'] == edge_label:
+                                        t1.discard(start_node)
+                                        t2.discard(end_node)
+                            accept = not bool(t1) and not bool(t2)
+
+
+
 
     return result_graph
 
@@ -284,19 +304,36 @@ if __name__ == '__main__':
     # type = "random", number = 100, file_name = "test_cases",
     # min_node_number=5, edge_type_number=3, probability=0.5
 
-    import pydot
-    from graphviz import render, view
-    from networkx.drawing.nx_pydot import write_dot
-    import visualization as vi
+    # import pydot
+    # from graphviz import render, view
+    # from networkx.drawing.nx_pydot import write_dot
+    # import visualization as vi
+    # import bisim_PnT as bi
 
     # a = nx.MultiDiGraph()
     # a.add_edge(0, 1, label='a')
     # a.add_edge(0, 2, label='a')
     # a.add_edge(1, 3, label='b')
     # a.add_edge(2, 4, label='b')
+
+    #
+    # f = True
+    # i = 0
+    # while f :
+    #     i = i+1
+    #     a = random_labeled_digraph(5,2,0.3)
+    #     b = generate_random_similar(a, 2)
+    #     k = bi.BisimPnT(['a','b'],a,b)
+    #     f = k.is_bisimilar()
+    #     if i == 100:
+    #         break
+    #     print i
+    # print f
     # vi.plot_graph(a, 'test')
-    # b = generate_random_similar(a, 2)
+    # vi.plot_graph(bi.BisimPnT(['a','b'],a).get_min_graph(),"mini_a")
+    # # b = generate_random_similar(a, 2)
     # vi.plot_graph(b, 'test1')
+    # vi.plot_graph(bi.BisimPnT(['a','b'],a).get_min_graph(),"mini_b")
     #
     # print a
 
@@ -343,3 +380,4 @@ if __name__ == '__main__':
 #     # edge_labels = nx.get_edge_attributes(G, "action")
 #     # nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, label_pos=0.3)
 #     # plt.show()
+    pass
