@@ -14,6 +14,7 @@ import logging
 import visualization as vi
 import os
 import argparse
+import itertools
 
 
 def test_cases_generator(c_type="random", number=100, file_name="test_cases",
@@ -258,14 +259,19 @@ def random_labeled_digraph(node_number, edge_types_number, p):
     :param p: probability for edge creation
     :return: graph G
     '''
-    G = nx.MultiDiGraph()
-    # G.add_nodes_from(range(n))
-    for v in range(node_number):
-        for w in range(node_number):
-            for e in range(edge_types_number):
-                if random.random() < p:
-                    # if any(label == chr(97+e) for label in G.get_edge_data(v,w)):
-                    G.add_edge(v, w, label=chr(97 + e))
+    while True:
+        p_s = p+1.0/(2*node_number*edge_types_number)
+        # print(node_number,edge_types_number,p, p_s)
+        G = nx.MultiDiGraph()
+        # G.add_nodes_from(range(n))
+        for v in range(node_number):
+            for w in range(node_number):
+                for e in range(edge_types_number):
+                    if random.random() < p_s:
+                        # if any(label == chr(97+e) for label in G.get_edge_data(v,w)):
+                        G.add_edge(v, w, label=chr(97 + e))
+        if G.order()==node_number:
+            break
 
     return G
 
@@ -317,25 +323,33 @@ if __name__ == '__main__':
     # a.add_edge(2, 4, label='b')
 
     #
-    # f = True
+    # flag = True
     # i = 0
-    # while f :
+    # while flag :
     #     i = i+1
-    #     a = random_labeled_digraph(5,2,0.3)
-    #     b = generate_random_similar(a, 2)
-    #     k = bi.BisimPnT(['a','b'],a,b)
-    #     f = k.is_bisimilar()
-    #     if i == 100:
-    #         break
-    #     print i
-    # print f
-    # vi.plot_graph(a, 'test')
-    # vi.plot_graph(bi.BisimPnT(['a','b'],a).get_min_graph(),"mini_a")
-    # # b = generate_random_similar(a, 2)
-    # vi.plot_graph(b, 'test1')
-    # vi.plot_graph(bi.BisimPnT(['a','b'],a).get_min_graph(),"mini_b")
+    #     while True:
+    #         a = random_labeled_digraph(5,2,0.5*random.random())
+    #         ka =bi.BisimPnT(['a','b'],a).get_min_graph()
+    #         if nx.is_weakly_connected(a)  and ka.order()>1:
+    #             break
     #
-    # print a
+    #     b = generate_random_similar(a, 2)
+    #
+    #     k = bi.BisimPnT(['a','b'],a,b)
+    #     flag = k.is_bisimilar()
+    #     print i
+    #     print flag
+    #     if i == 1:
+    #         break
+    #
+    # vi.plot_graph(a, 'testa')
+    # vi.plot_graph(ka,"mini_a")
+    # # b = generate_random_similar(a, 2)
+    # vi.plot_graph(b, 'testb')
+    # vi.plot_graph(bi.BisimPnT(['a','b'],a).get_min_graph(),"mini_b")
+    # vi.plot_graph_with_partition(k.full_graph_U, k.coarsest_partition(), 'test_s')
+    # #
+    # # print a
 
     # test_cases_generator(type="random", min_node_number=3, edge_type_number=2,file_name='random_pairs',number=10000)
 
