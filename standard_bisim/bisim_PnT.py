@@ -94,7 +94,8 @@ class BisimPnT:
         return False
 
     def coarsest_partition(self, plot=False):
-
+        if self.co_partition:
+            return self.co_partition
         # Initial
         block_u = set(self.full_graph_U.nodes())
 
