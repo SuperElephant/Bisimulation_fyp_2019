@@ -15,8 +15,8 @@ def experiment(c_type, nodes_num, edge_type_num, case_number, graph_density, p_r
                             edge_type_number=edge_type_num,
                             probability=graph_density,
                             p_rate=p_rate)
-    trainer = ml_a.ML(learning_rate=0.05,
-                      epochs=100,
+    trainer = ml_a.ML(learning_rate=0.1,
+                      epochs=500,
                       batch_size=100,
                       data_path="./data/" + file_name + ".csv",
                       model_name=file_name)
@@ -24,8 +24,8 @@ def experiment(c_type, nodes_num, edge_type_num, case_number, graph_density, p_r
 
 
 if __name__ == '__main__':
-    nodes_num = 3
-    edge_type_num = 2
+    nodes_num = 5
+    edge_type_num = 3
 
     # deep test
     graphs_sum = math.pow(2, nodes_num * nodes_num * edge_type_num)
@@ -39,7 +39,7 @@ if __name__ == '__main__':
     p_rate = 0.5
     graph_density =0.5
 
-    print("========== wide test ==========")
+    print("========== wide experiments ==========")
     graph_density_s = numpy.arange(0.1,1,0.1)
     print("---- ARGUMENTS ----\n"
           "nodes_num = %s \n"
@@ -54,8 +54,8 @@ if __name__ == '__main__':
     for graph_density in graph_density_s:
         experiment(c_type, nodes_num, edge_type_num, case_number, graph_density, p_rate)
 
-    print("========== deep test ==========")
-    nodes_num_s = range(3,10)
+    print("========== deep experiments ==========")
+    nodes_num_s = range(5,15)
     graph_density =0.5
     print("---- ARGUMENTS ----\n"
           "nodes_num = %s \n"
