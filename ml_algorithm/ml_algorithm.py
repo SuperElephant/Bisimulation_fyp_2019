@@ -7,6 +7,7 @@ import math
 import pandas as pd
 import argparse
 import sys
+import csv
 
 DIR_SUMMARY = './summary'
 DIR_MODEL = './model'
@@ -54,12 +55,14 @@ class ML:
     def clean_old_record(self):
         for dir in [DIR_MODEL + '/' + self.model_name ,
                     DIR_SUMMARY + '/' + self.model_name,
-                    DIR_SUMMARY + '_g' + '/' + self.model_name ]:
+                    DIR_SUMMARY + '/' + self.model_name +'_test' ]:
             if tf.gfile.Exists(dir):
                 tf.gfile.DeleteRecursively(dir)
             tf.gfile.MakeDirs(dir)
 
     def fc(self, continue_train=False):
+
+        kernel_initializer = tf.initializers.glorot_normal()
         tf.reset_default_graph()
         small_layer_number = int(math.log(self.tupe_length) * 5)
         # print small_layer_number, self.tupe_length
@@ -71,12 +74,12 @@ class ML:
         with tf.name_scope('g1_p'):
             with tf.variable_scope('graph_pross'):
                 g1_dence1 = tf.layers.dense(g1, self.tupe_length, activation=tf.nn.relu,
-                                            kernel_initializer=tf.random_normal_initializer(),
+                                            kernel_initializer=kernel_initializer,
                                             bias_initializer=tf.random_normal_initializer(),
                                             name='dence1')
 
                 g1_s_dence1 = tf.layers.dense(g1_dence1, small_layer_number, activation=tf.nn.relu,
-                                              kernel_initializer=tf.random_normal_initializer(),
+                                              kernel_initializer=kernel_initializer,
                                               bias_initializer=tf.random_normal_initializer(),
                                               name='s_dence1')
 
@@ -92,11 +95,11 @@ class ML:
         with tf.name_scope('merge'):
             two_graphs = tf.concat([g1_s_dence1, g2_s_dence1], 1)
             merge_layer = tf.layers.dense(two_graphs, small_layer_number, activation=tf.nn.relu,
-                                          kernel_initializer=tf.random_normal_initializer(),
+                                          kernel_initializer=kernel_initializer,
                                           bias_initializer=tf.random_normal_initializer())
         with tf.name_scope('logits'):
             logits = tf.layers.dense(merge_layer, 2, activation=tf.identity,
-                                     kernel_initializer=tf.random_normal_initializer(),
+                                     kernel_initializer=kernel_initializer,
                                      bias_initializer=tf.random_normal_initializer())
         with tf.name_scope('loss'):
             loss = tf.losses.softmax_cross_entropy(y, logits)
@@ -106,14 +109,14 @@ class ML:
         global_step = tf.Variable(0, trainable=False, name='global_step')
 
         with tf.name_scope('train'):
-            train = tf.train.AdamOptimizer(learning_rate=0.01).minimize(loss=loss, global_step=global_step)
+            train = tf.train.AdadeltaOptimizer(learning_rate=self.learning_rate).minimize(loss=loss, global_step=global_step)
 
         acc_metric, acc_metric_update = tf.metrics.accuracy(tf.argmax(logits, 1), tf.argmax(y, 1), name='metric_acc')
         pre_metric, pre_metric_update = tf.metrics.precision(tf.argmax(logits, 1), tf.argmax(y, 1), name='metric_pre')
         recall_metric, recall_metric_update = tf.metrics.recall(tf.argmax(logits, 1), tf.argmax(y, 1), name='metric_recall')
-        tf.summary.scalar('accuracy', acc_metric)
-        tf.summary.scalar('precision', pre_metric)
-        tf.summary.scalar('recall', recall_metric)
+        tf.summary.scalar('accuracy', acc_metric_update)
+        tf.summary.scalar('precision', pre_metric_update)
+        tf.summary.scalar('recall', recall_metric_update)
 
         metric_acc_var = tf.get_collection(tf.GraphKeys.LOCAL_VARIABLES, scope="metric_acc")
         acc_initializer = tf.variables_initializer(var_list=metric_acc_var)
@@ -125,6 +128,14 @@ class ML:
         merged_summary = tf.summary.merge_all()
         saver = tf.train.Saver()
 
+        # if not os.access('./data/', os.R_OK):
+        #     os.mkdir('./data/')
+        # with open('./data/' + "temp" + '.csv', 'w') as csvfile:
+        #     print('write in path: ' + './data/' + "temp" + '.csv')
+        #     fieldnames = ['acc', 'pre', 'recall','g_step', 'acc_', 'pre_', 'recall_','g_step_']
+        #     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        #     writer.writeheader()
+
         with tf.Session() as sess:
             if continue_train:
                 saver.restore(sess, DIR_MODEL + '/' + self.model_name + '/model.ckpt')
@@ -135,23 +146,42 @@ class ML:
                 # initial
                 sess.run(tf.global_variables_initializer())
 
-            train_writer = tf.summary.FileWriter(DIR_SUMMARY + '_g' + '/' + self.model_name, sess.graph)
-            test_writer = tf.summary.FileWriter(DIR_SUMMARY + '/' + self.model_name)
+            train_writer = tf.summary.FileWriter(DIR_SUMMARY + '/' + self.model_name, sess.graph)
+            test_writer = tf.summary.FileWriter(DIR_SUMMARY + '/' + self.model_name + '_test')
 
             for epoch in range(self.epochs):
                 sess.run([acc_initializer, pre_initializer, recall_initializer])
                 loss_p = None
                 g_step = None
+
+                summary_11, g_step_1= sess.run([merged_summary,global_step],
+                                            feed_dict={g1: self.g1_dfs[1],
+                                                       g2: self.g2_dfs[1],
+                                                       y: self.label_dfs[1]})
+
+                test_writer.add_summary(summary_11, g_step_1)
+
                 for i in range(self.batch_number):
                     _, loss_p, summary, g_step = sess.run([train, loss, merged_summary, global_step],
                                                   feed_dict={g1: self.g1_dfs[0][i],
                                                              g2: self.g2_dfs[0][i],
                                                              y: self.label_dfs[0][i]})
-                    sess.run([acc_metric_update, pre_metric_update, recall_metric_update],
-                             feed_dict={g1: self.g1_dfs[1],
-                                        g2: self.g2_dfs[1],
-                                        y: self.label_dfs[1]})
-                    test_writer.add_summary(summary, g_step)
+                    train_writer.add_summary(summary, g_step)
+
+                    # summary, g_step_1= sess.run([merged_summary,global_step],
+                    #                             feed_dict={g1: self.g1_dfs[1],
+                    #                                        g2: self.g2_dfs[1],
+                    #                                        y: self.label_dfs[1]})
+                    #
+                    # # summary, g_step_1, acc, pre, recall= sess.run([merged_summary,global_step, acc_metric, pre_metric, recall_metric],
+                    # #          feed_dict={g1: self.g1_dfs[1],
+                    # #                     g2: self.g2_dfs[1],
+                    # #                     y: self.label_dfs[1]})
+                    # test_writer.add_summary(summary, g_step_1)
+                    #
+                    # #
+                    # # writer.writerow({fieldnames[0]: _1, fieldnames[1]: _2, fieldnames[2]: _3, fieldnames[3]: g_step,
+                    # #                  fieldnames[4]: acc, fieldnames[5]: pre, fieldnames[6]: recall, fieldnames[7]: g_step_1})
 
                 if epoch % 10 == 0:
                     # summary,acc = sess.run([merged_summary ,acc_metric])
@@ -172,13 +202,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-e", "--epoch", type=int, default=100, dest="epoch",
                         help="Number of training epochs")
-    parser.add_argument("-l", "--learning_rate", type=float, default=0.05, dest="learning_rate",
+    parser.add_argument("-l", "--learning_rate", type=float, default=0.2, dest="learning_rate",
                         help="Initial learning rate")
     parser.add_argument("-b", "--batch_size", type=int, default=100, dest="batch_size",
                         help="Number of data for one batch")
     parser.add_argument("-p", "--data_path", default="./data/test_cases.csv", dest="data_path",
                         help="Path to input data")
-    parser.add_argument("-r", "--test_train_rate", type=float, default=0.1, dest="test_train_rate",
+    parser.add_argument("-r", "--test_train_rate", type=float, default=0.5, dest="test_train_rate",
                         help="The rate of test cases and train cases")
     parser.add_argument("-c", "--continue", type=bool, default=False, dest="continue_train",
                         help="Continue last training")
