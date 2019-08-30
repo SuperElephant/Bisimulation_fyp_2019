@@ -80,3 +80,5 @@ To visulise the performance of machine learning please use ```TensorBoard```
 ```
 $ tensorboard --logdir <path-to-summary-folder> --host localhost
 ```
+
+*Note: the experiments data in the report can be downloaded [HERE](https://drive.google.com/file/d/1xuVKh_E8Z671xtPgPN6QsE7gROKCKNY2/view?usp=sharing)*
