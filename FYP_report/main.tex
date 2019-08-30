@@ -1,0 +1,100 @@
+\documentclass[a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{float}
+\usepackage{svg}
+\usepackage{titlesec}
+\usepackage{graphicx}
+\usepackage[hmargin=1.4in, vmargin={1.4in,1.4in}]{geometry}
+
+
+% \graphicspath{ {./img/} }
+
+% \usepackage{xpatch}
+% \xpatchcmd{\thebibliography}{\section*}{\section}{}{}
+
+\usepackage[colorlinks,
+            linkcolor=red,
+            anchorcolor=blue,
+            citecolor=red]{hyperref}
+
+\usepackage{fancyhdr}
+
+\pagestyle{fancy}
+\fancyhf{}
+% \fancyhead[L]{\textsl{\rightmark}}
+\fancyhead[R]{\textsl{\rightmark}}
+\fancyfoot[R]{\textbf{\thepage}}
+\renewcommand{\headrulewidth}{0pt}
+            
+\usepackage{graphicx}
+\usepackage{subfigure}
+\usepackage{amsthm}
+\newtheorem{defin}{Definition}[section]
+\newtheorem{algor}{Algorithm}[section]
+\usepackage{amsmath}
+\usepackage{chngcntr}
+\numberwithin{figure}{section}
+\numberwithin{table}{section}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage[english]{babel}
+\usepackage{microtype}
+\usepackage{caption}
+\usepackage[section]{placeins}
+\setcounter{tocdepth}{2}
+%========================code
+\usepackage{listings}
+\usepackage{color}
+% \lstset{frame=Trbl,numbers=left,breaklines=true, basicstyle=\footnotesize\ttfamily}
+% \usepackage{courier}
+
+\usepackage{minted}
+% ===================================================
+% \renewcommand{\thesection}{\arabic{section}.}
+% \renewcommand{\thesubsection}{\thesection\arabic{subsection}.}
+\renewcommand{\thefigure}{\arabic{section}.\arabic{figure}}
+\renewcommand{\thesubfigure}{\thefigure(\alph{subfigure})}
+\makeatletter
+\renewcommand{\p@subfigure}{}
+\renewcommand{\@thesubfigure}{(\alph{subfigure})\hskip\subfiglabelskip}
+\makeatother
+
+\newenvironment{code}{\captionsetup{type=listing}}{}
+% \usepackage{tocbibind}
+\usepackage[toc,page]{appendix}
+
+
+\title{Neural Network for Bisimulation}
+\author{Chao Xiang}
+\date{April 2019}
+
+\begin{document}
+\counterwithin{lstlisting}{section}
+\counterwithin{listing}{section}
+% \pagestyle{pageHeader}
+\maketitle
+% \newpage
+
+\input{tex/abstract}
+\newpage
+\tableofcontents
+\newpage
+\input{tex/introduction}
+\input{tex/background}
+\input{tex/description}
+% \input{tex/design}
+\input{tex/realisation}
+\input{tex/experiment}
+\input{tex/evaluation}
+\input{tex/learning}
+\input{tex/profession}
+\newpage
+\pagenumbering{roman}
+\input{tex/appendices}
+\newpage
+\addcontentsline{toc}{section}{References}
+\bibliographystyle{ieeetr}
+\bibliography{reference}
+
+\end{document}
