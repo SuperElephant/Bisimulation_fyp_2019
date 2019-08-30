@@ -1,0 +1,29 @@
+\section{Introduction}
+% This will give a brief overview of the project including
+
+% What problem is addressed by the project?
+% What are the aims and objectives of the project?
+% What are the challenges of the project?
+% What is the solution produced?
+% How effective is the solution / how successful has the project been?
+
+Artificial Neural Networks (ANNs) has been widely used in multiple areas. 
+It has been proved that ANN is Turing complete \cite{siegelmann1995computational}. 
+It indicates that understanding the logic (i.e. symbolic computation) is possible theoretically, gives broad application prospects.
+There are ANNs \cite{holldobler1999approximating, Holldobler91towardsa} which are able to mimic some first-order logic program. 
+However, these solutions were based on the Recurrent Neural Network (RNN) and tried to simulate the logic program rather than catch the logic feature. 
+Trying to explore the limitation of ANNs for understanding logical concepts, will help the research of neuro-symbolic integration.
+
+Thus, here we are concerned with the capability of different  Multilayer Perceptrons (MLPs) to understand the logic concept (i.e. bisimulation of logic structures ). 
+And MLPs here is introduced as the representative of ANNs, as it is recognised as the original and most basic model of ANNs.
+Datasets used to train the MLPs is consisted of groups of generated graphs with flags (i.e. a number that indicates if two graphs are bisimulation).
+Then test if MLPs are able to learn the ability to distinguish the bisimulation equivalence.
+The report is structured as follows.
+First, in Section \ref{sec:background}, relevant research of bisimulation and relation between neural network and logic will be given. 
+The specification of the problem and the approach used to explore the limitation will be explained in Section \ref{sec:description}.
+Then in Section \ref{sec:relisation}, the process of realisation including component test and the process of the project will be stated.
+Section \ref{sec:experiment} will discuss the entire process of the experiments including the setting up, impelementation and analysation of result.
+And Section \ref{sec:evaluation}, the summary and the evaluation from the aspect of engineer and research will be explained.
+Knowledge and skills gained will be talked in Section \ref{sec:learning}.
+The professional issue will be discussed in Section \ref{sec:profession}.
+At last the full code of the project, part of the data, screenshots of sample runs, user manual, progress log and Gantt chart will be appended in the Section \ref{sec:appendics}.

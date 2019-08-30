@@ -1,0 +1,68 @@
+\section{Evaluation and Summary}
+\label{sec:evaluation}
+
+% This gives an evaluation of the project, including
+
+% A description of how the project is evaluated, including
+    % What criteria are used to evaluate whether the system is suceesful?
+    % How these criteria are assessed?
+    % Who is involved in the evaluation?
+% Your critical evaluation of your project results/outcomes.
+% Your critical evaluation of the strengths and weaknesses of your project as carried out.
+% Where appropriate, 3rd party evaluation of the software/computer system/application developed on the project, and/or customer feedback, be obtained in strict accordance with
+    % ethical use of the project 3rd party evaluation human participants
+        % explicitly state if human participants were involved for the project 3rd party evaluation;
+        % if human participants were involved for the project 3rd party evaluation,
+            % explicitly confirm that the CS Department ethical procedure for Comp39x projects 3rd party evaluation has been followed.
+            % include into appendix the 3rd party evaluator information sheet and consent forms completed and signed by the 3rd party evaluators on your project.
+
+From the engineering aspect, the project is generally good and gives two command line application as research tools.
+One can generate same scale graphs pairs with the bisimulation flag that ready to be used as data set for machine learning.
+And the scale of the graph, number of pair, the rate of positive and negative, graph density can be customised.
+Other can use the data generated to training a preset neural network.
+In this tool, the number of training epoch, learning rate, batch size, the rate of test set and training set division can be customised.
+And the training can be continued after the program ends.
+The whole project was pushed as expected.
+All components were tested and work well.
+Nevertheless, the process of the project still needs improvement.
+The most important is the test of components.
+It was done by hand, which not reliable and inefficient.
+Most test data from the textbook is reliable but not enough in quantity.
+
+
+On the other hand, form aspect of research, the goal is generally achieved.
+Whereas, it opens the next stage of research.
+There are two experiments done in this project.
+First is the wide experiment. 
+It tests the performance of the learning algorithm when feeding the data (mainly) from different parts of space (i.e. all possible same scale graphs).
+The experiment shows that in most situation the performance of the algorithm is similar.
+Base on it, one can say that except the extreme situation (i.e. graph density equals 0.9) the performance of the algorithm when feeds a non-extreme value, is representative respect to the graphs pair with the same scale.
+Second is the deep experiment.
+It is aimed at testing the capability of the preset neural network.
+It will test the performance of the learning algorithm when feeding the data with different scale (i.e. node number)
+Base on the conclusion of the wide experiment, only the dataset generated with one density will be used to represent the result of the whole space in this very scale.
+And the result shows that when the graphs become bigger, the performance did become worse,
+which indicate the limitation of the neural network.
+However, when the scale keeps expanding to a certain level, the performance unexpectedly become better.
+It may be because of the insufficient quantity, but there still needs more experience.
+
+Still, there are many things need to be improved as a research project.
+Firstly, the literature review needs to be more at the begin of the project.
+At the start of the project, most literature reviewed is about bisimulation.
+The main aim was overlooked during the development of the first part.
+It caused problems when the project stepped into the second part.
+Some components need to be rewritten in order to serve the second part.
+Second, the experiment design should be carefully considered.
+For the wide experiment, the dataset used can be better by mixing all graphs pairs generated on different density then sampling from the pool.
+For the deep experiment, the criteria of the deep experiment is quite blurred.
+And the result indicates that more experiments are needed.
+
+Moreover, for further experiments a better test cases generator may need to be designed.
+The generator designed and implemented in the project aimed at ``random".
+In other words, the generator was designed to be as random as possible.
+However, in fact, true random generated graphs are mostly like the graphs shown in Figure \ref{fig:outputg3} and Figure \ref{fig:outputg4}.
+They are either very easy to be denied or very simple to be recognised (see Section \ref{sec:results}).
+Concretely, it is possible that 80\% of graphs pairs belongs to the above two types.
+In that situation, the network will only need to learn to distinguish these two types of graphs, the performance can reach over 80\% accuracy while lacking generalisation ability.
+Thu, the better idea may be a generator that can generate all kinds of pair while decreasing the incidence of these two types.
+And generative adversarial network (GAN) can be a good choice.

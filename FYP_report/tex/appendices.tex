@@ -1,0 +1,104 @@
+\addcontentsline{toc}{section}{Appendices}
+\appendix
+\section{Appendices}
+\label{sec:appendics}
+% Appendices are meant to contain detailed material, required for completeness, but which are too detailed to include in the main body of the text. Typically they should contain code listings, details of test data, screen shots of sample runs, a user guide, full design diagrams, instructions for unpacking and mounting any software included with the dissertation and similar material. A zip file containing the project archive material (including source codes, instructions on how to run the software, pictures used, etc.) should be submitted through the E-project system. If your system is available on-line, you should provide instructions of how to access the system via the internet.
+
+\subsection{User Manuel}
+\subsubsection*{Installation}
+To run these tools, the depend packages need to be installed.
+\begin{minted}[frame=single,breaklines]{text}
+$ pip install -r requirements.txt
+
+\end{minted}
+Notice that, it is recommend to installed in virtual environment.
+\subsubsection*{Usage}
+
+These tools is developed on \texttt{Python 2.7}.
+
+For quick test, please run the command directly without any parameters.
+\begin{minted}[frame=single,breaklines]{text}
+$ python ml_algorithm/ml_algorithm.py
+$ python standard_bisim/test_cases_generator.py
+\end{minted}
+
+To run the wide and deep experiments:
+\begin{minted}[frame=single,breaklines]{text}
+$ python experiments.py 
+\end{minted}
+
+Follows are specific direction:
+
+\begin{minted}[frame=single,breaklines]{text}
+$ python ml_algorithm/ml_algorithm.py -h
+
+usage: ml_algorithm.py [-h] [-e EPOCH] [-l LEARNING_RATE] [-b BATCH_SIZE]
+                       [-p DATA_PATH] [-r TEST_TRAIN_RATE] 
+                       [-c CONTINUE_TRAIN] [-n MODEL_NAME]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -e EPOCH, --epoch EPOCH
+                        Number of training epochs
+  -l LEARNING_RATE, --learning_rate LEARNING_RATE
+                        Initial learning rate
+  -b BATCH_SIZE, --batch_size BATCH_SIZE
+                        Number of data for one batch
+  -p DATA_PATH, --data_path DATA_PATH
+                        Path to input data
+  -r TEST_TRAIN_RATE, --test_train_rate TEST_TRAIN_RATE
+                        The rate of test cases and train cases
+  -c CONTINUE_TRAIN, --continue CONTINUE_TRAIN
+                        Continue last training
+  -n MODEL_NAME, --model_name MODEL_NAME
+                        The name of the model
+\end{minted}
+\begin{minted}[frame=single,breaklines]{text}
+$ python standard_bisim/test_cases_generator.py -h
+
+usage: test_cases_generator.py [-h] [-t {random,all}] [-n NUMBER]
+                               [-f FILE_NAME] [-v NODE_NUMBER]
+                               [-e EDGE_TYPE_NUMBER] [-r P_RATE]
+                               [-p PROBABILITY]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -t {random,all}, --type {random,all}
+                        Type of data set
+  -n NUMBER, --number NUMBER
+                        The length of data set
+  -f FILE_NAME, --file_name FILE_NAME
+                        Name of the output file
+  -v NODE_NUMBER, --node_number NODE_NUMBER
+                        Number of the nodes of the graph in the data set
+  -e EDGE_TYPE_NUMBER, --edge_type-number EDGE_TYPE_NUMBER
+                        The total types of the edge in the graphs
+  -r P_RATE, --p_rate P_RATE
+                        Rate of the positive cases over all cases
+  -p PROBABILITY, --probability PROBABILITY
+                        The density of the random generate graphs
+\end{minted}
+
+Here is the directory tree of the whole project.
+
+\begin{minted}[frame=single,breaklines]{text}
+FYP
+    Bisimulation_fyp_2019
+        experiments.py
+        ml_algorithm
+        requirements.txt
+        standard_bisim
+    FYP_report
+        img
+        main.tex
+        reference.bib
+        tex
+    experiment_data
+        deep
+        wide
+\end{minted}
+
+To visulise the performance of machine learning please use \texttt{TensorBoard}
+\begin{minted}[frame=single,breaklines]{text}
+$ tensorboard --logdir <path-to-summary-folder> --host localhost
+\end{minted}
