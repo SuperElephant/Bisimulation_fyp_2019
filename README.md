@@ -1,5 +1,5 @@
 # Proejct
-For the detial of the project please see [FYP_report.pdf](https://github.com/SuperElephant/Bisimulation_fyp_2019/blob/master/FYP_report/FYP_report.pdf)
+For the detail of the project please see [FYP_report.pdf](https://github.com/SuperElephant/Bisimulation_fyp_2019/blob/master/FYP_report/FYP_report.pdf)
 
 # User Manuel
 
